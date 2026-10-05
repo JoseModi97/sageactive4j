@@ -9,7 +9,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 /** Lists sales quotes. */
-@Command(name = "quote", description = "List sales quotes in the current organization.")
+@Command(name = "quote", mixinStandardHelpOptions = true,
+        description = "List sales quotes in the current organization.")
 final class QuoteCommand extends CliCommand implements Callable<Integer> {
 
     @Option(names = "--first", description = "How many to show (default: ${DEFAULT-VALUE})", defaultValue = "20")

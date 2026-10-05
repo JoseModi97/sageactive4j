@@ -9,7 +9,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 /** Lists ledger accounts from the chart of accounts. */
-@Command(name = "account", description = "List ledger accounts from the chart of accounts.")
+@Command(name = "account", mixinStandardHelpOptions = true,
+        description = "List ledger accounts from the chart of accounts.")
 final class AccountCommand extends CliCommand implements Callable<Integer> {
 
     @Option(names = "--first", description = "How many to show (default: ${DEFAULT-VALUE})", defaultValue = "20")

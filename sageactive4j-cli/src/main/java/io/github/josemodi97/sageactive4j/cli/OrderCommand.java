@@ -9,7 +9,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 /** Lists sales orders. */
-@Command(name = "order", description = "List sales orders in the current organization.")
+@Command(name = "order", mixinStandardHelpOptions = true,
+        description = "List sales orders in the current organization.")
 final class OrderCommand extends CliCommand implements Callable<Integer> {
 
     @Option(names = "--first", description = "How many to show (default: ${DEFAULT-VALUE})", defaultValue = "20")

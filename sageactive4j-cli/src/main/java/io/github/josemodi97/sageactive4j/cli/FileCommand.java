@@ -14,7 +14,8 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 /** Lists or uploads files. */
-@Command(name = "file", description = "Upload or list file attachments ('file', 'file upload').",
+@Command(name = "file", mixinStandardHelpOptions = true,
+        description = "Upload or list file attachments ('file', 'file upload').",
         subcommands = {FileCommand.ListFiles.class, FileCommand.Upload.class})
 final class FileCommand extends CliCommand implements Callable<Integer> {
 
@@ -24,7 +25,7 @@ final class FileCommand extends CliCommand implements Callable<Integer> {
     }
 
     /** Lists file attachments. */
-    @Command(name = "list", description = "List file attachments.")
+    @Command(name = "list", mixinStandardHelpOptions = true, description = "List file attachments.")
     static final class ListFiles extends CliCommand implements Callable<Integer> {
         @Option(names = "--first", description = "How many to show (default: ${DEFAULT-VALUE})", defaultValue = "20")
         int first;
@@ -54,7 +55,7 @@ final class FileCommand extends CliCommand implements Callable<Integer> {
     }
 
     /** Uploads a file attachment. */
-    @Command(name = "upload", description = "Upload and attach a file to an entity.")
+    @Command(name = "upload", mixinStandardHelpOptions = true, description = "Upload and attach a file to an entity.")
     static final class Upload extends CliCommand implements Callable<Integer> {
         @Option(names = "--entity-type", required = true, description = "CUSTOMER, SUPPLIER, SALES_INVOICE, PURCHASE_INVOICE")
         FileEntityType entityType;

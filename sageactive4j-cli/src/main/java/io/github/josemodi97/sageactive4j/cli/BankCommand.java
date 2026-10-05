@@ -11,7 +11,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 /** Lists bank accounts or bank movements. */
-@Command(name = "bank", description = "List bank accounts or movements ('bank accounts', 'bank movements').",
+@Command(name = "bank", mixinStandardHelpOptions = true,
+        description = "List bank accounts or movements ('bank accounts', 'bank movements').",
         subcommands = {BankCommand.Accounts.class, BankCommand.Movements.class, BankCommand.Unreconcile.class})
 final class BankCommand extends CliCommand implements Callable<Integer> {
 
@@ -21,7 +22,7 @@ final class BankCommand extends CliCommand implements Callable<Integer> {
     }
 
     /** Lists bank accounts. */
-    @Command(name = "accounts", description = "List connected bank accounts.")
+    @Command(name = "accounts", mixinStandardHelpOptions = true, description = "List connected bank accounts.")
     static final class Accounts extends CliCommand implements Callable<Integer> {
         @Override
         public Integer call() {
@@ -46,7 +47,7 @@ final class BankCommand extends CliCommand implements Callable<Integer> {
     }
 
     /** Lists imported bank movements. */
-    @Command(name = "movements", description = "List imported bank movements.")
+    @Command(name = "movements", mixinStandardHelpOptions = true, description = "List imported bank movements.")
     static final class Movements extends CliCommand implements Callable<Integer> {
         @Option(names = "--account", description = "Filter by bank account id")
         String bankAccountId;
@@ -80,7 +81,7 @@ final class BankCommand extends CliCommand implements Callable<Integer> {
     }
 
     /** Unreconciles a bank movement. */
-    @Command(name = "unreconcile", description = "Unreconcile a previously linked bank movement.")
+    @Command(name = "unreconcile", mixinStandardHelpOptions = true, description = "Unreconcile a previously linked bank movement.")
     static final class Unreconcile extends CliCommand implements Callable<Integer> {
         @Option(names = "--movement", required = true, description = "Bank movement / transaction ID")
         String movementId;

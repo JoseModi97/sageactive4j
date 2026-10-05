@@ -6,7 +6,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 /** Generates a credit note for a posted sales invoice. */
-@Command(name = "credit-note", description = "Generate a credit note for a posted sales invoice.")
+@Command(name = "credit-note", mixinStandardHelpOptions = true,
+        description = "Generate a credit note for a posted sales invoice.")
 final class CreditNoteCommand extends CliCommand implements Callable<Integer> {
 
     @Option(names = "--invoice", required = true, description = "Posted sales invoice id (UUID)")

@@ -9,7 +9,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 /** Lists tax rates and definitions. */
-@Command(name = "tax", description = "List tax rates and definitions in the current organization.")
+@Command(name = "tax", mixinStandardHelpOptions = true,
+        description = "List tax rates and definitions in the current organization.")
 final class TaxCommand extends CliCommand implements Callable<Integer> {
 
     @Option(names = "--first", description = "How many to show (default: ${DEFAULT-VALUE})", defaultValue = "50")

@@ -11,7 +11,8 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 /** Uploads a document to Sage Active's OCR pipeline (AP Automation). */
-@Command(name = "ocr", description = "Upload a receipt or invoice document for automated OCR processing (AP Automation).")
+@Command(name = "ocr", mixinStandardHelpOptions = true,
+        description = "Upload a receipt or invoice document for automated OCR processing (AP Automation).")
 final class OcrCommand extends CliCommand implements Callable<Integer> {
 
     @Parameters(index = "0", description = "Document file to process (PDF, PNG, JPG)")

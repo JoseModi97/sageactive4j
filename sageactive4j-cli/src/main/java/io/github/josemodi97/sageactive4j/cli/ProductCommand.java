@@ -10,7 +10,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 /** Lists products or tariffs. */
-@Command(name = "product", description = "List products or tariffs ('product', 'product tariffs').",
+@Command(name = "product", mixinStandardHelpOptions = true,
+        description = "List products or tariffs ('product', 'product tariffs').",
         subcommands = ProductCommand.Tariffs.class)
 final class ProductCommand extends CliCommand implements Callable<Integer> {
 
@@ -42,7 +43,7 @@ final class ProductCommand extends CliCommand implements Callable<Integer> {
     }
 
     /** Lists tariffs. */
-    @Command(name = "tariffs", description = "List configured sales tariffs.")
+    @Command(name = "tariffs", mixinStandardHelpOptions = true, description = "List configured sales tariffs.")
     static final class Tariffs extends CliCommand implements Callable<Integer> {
         @Option(names = "--first", description = "How many to show (default: ${DEFAULT-VALUE})", defaultValue = "20")
         int first;

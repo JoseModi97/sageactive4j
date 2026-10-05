@@ -9,7 +9,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 /** Lists customers. */
-@Command(name = "customer", description = "List customers in the current organization.")
+@Command(name = "customer", mixinStandardHelpOptions = true,
+        description = "List customers in the current organization.")
 final class CustomerCommand extends CliCommand implements Callable<Integer> {
 
     @Option(names = "--first", description = "How many to show (default: ${DEFAULT-VALUE})", defaultValue = "20")
