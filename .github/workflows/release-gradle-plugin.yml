@@ -40,6 +40,9 @@ jobs:
           fi
           echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Make gradlew executable
+        run: chmod +x gradlew sageactive4j-gradle-plugin/gradlew
+
       - name: Publish reactor artifacts to mavenLocal for plugin integration tests
         run: ./gradlew publishToMavenLocal -PsageActiveVersion=${{ steps.version.outputs.version }}
 

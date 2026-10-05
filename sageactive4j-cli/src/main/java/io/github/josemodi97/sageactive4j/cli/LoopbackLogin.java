@@ -98,7 +98,7 @@ final class LoopbackLogin {
         } catch (java.net.URISyntaxException e) {
             throw new IllegalStateException(e);
         } finally {
-            server.stop(0);
+            server.stop(1);
         }
     }
 
@@ -117,6 +117,7 @@ final class LoopbackLogin {
             // stops this server as soon as it resumes.
             if (error != null) {
                 respond(exchange, 400, "Sign-in failed (" + error + "). You can close this tab.");
+                exchange.close();
                 code.completeExceptionally(new CliException("Sign-in was refused by SBC Auth: " + error
                         + (params.get("error_description") == null ? "" : " - " + params.get("error_description"))));
                 return;
@@ -127,9 +128,13 @@ final class LoopbackLogin {
                 return;
             }
             respond(exchange, 200, "Signed in to Sage Active. You can close this tab and return to the terminal.");
+            exchange.close();
             code.complete(value);
         } finally {
-            exchange.close();
+            try {
+                exchange.close();
+            } catch (Exception ignored) {
+            }
         }
     }
 

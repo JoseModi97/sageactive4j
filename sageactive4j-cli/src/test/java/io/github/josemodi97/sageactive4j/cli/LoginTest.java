@@ -24,6 +24,8 @@ class LoginTest extends CliTestSupport {
 
     private final HttpClient http = HttpClient.newHttpClient();
     private final List<Integer> callbackStatuses = new CopyOnWriteArrayList<>();
+    private final java.util.concurrent.atomic.AtomicReference<Throwable> browserFailure = new java.util.concurrent.atomic.AtomicReference<>();
+    private volatile Thread browserThread;
 
     private String callbackUrl(String authUrl, String state, String extra) throws Exception {
         Map<String, String> params = LoopbackLogin.query(URI.create(authUrl).getRawQuery());
@@ -43,9 +45,34 @@ class LoginTest extends CliTestSupport {
     /** Plays the browser in the background (the CLI blocks waiting for the callback). */
     private void browserDoes(java.util.function.Consumer<String> behaviour) {
         browser = url -> {
-            new Thread(() -> behaviour.accept(url)).start();
+            browserThread = new Thread(() -> {
+                try {
+                    behaviour.accept(url);
+                } catch (Throwable t) {
+                    browserFailure.set(t);
+                }
+            }, "test-browser");
+            browserThread.start();
             return true;
         };
+    }
+
+    private void waitForBrowser() throws Exception {
+        if (browserThread != null) {
+            browserThread.join(10000);
+            Throwable failure = browserFailure.get();
+            if (failure != null) {
+                if (failure instanceof Exception) {
+                    throw (Exception) failure;
+                }
+                throw new RuntimeException(failure);
+            }
+        }
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDownBrowser() throws Exception {
+        waitForBrowser();
     }
 
     @Test
@@ -63,6 +90,7 @@ class LoginTest extends CliTestSupport {
         });
 
         Run r = run("login", "--port", "0", "--timeout", "20");
+        waitForBrowser();
 
         assertEquals(0, r.exitCode, r.toString());
         assertTrue(r.out.contains("Signed in."), r.out);
@@ -87,6 +115,7 @@ class LoginTest extends CliTestSupport {
             }
         });
         assertEquals(0, run("login", "--port", "0").exitCode);
+        waitForBrowser();
 
         sage.on("userProfile", "{\"userProfile\":{\"fullName\":\"Ada\"}}");
         assertEquals(0, run("query", "--no-org", "{ userProfile { fullName } }").exitCode);
@@ -104,6 +133,7 @@ class LoginTest extends CliTestSupport {
             }
         });
         Run r = run("login", "--port", "0", "--timeout", "20");
+        waitForBrowser();
         assertEquals(1, r.exitCode);
         assertTrue(r.err.contains("access_denied - User cancelled"), r.err);
         assertTrue(sage.tokenRequests.isEmpty());

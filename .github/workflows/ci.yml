@@ -77,6 +77,8 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
+      - name: Make gradlew executable
+        run: chmod +x gradlew sageactive4j-gradle-plugin/gradlew
       # The plugin's tests compile generated examples against the reactor's
       # artifacts, and its TestKit builds resolve them, from mavenLocal.
       - name: Publish the reactor to mavenLocal
