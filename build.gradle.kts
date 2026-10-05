@@ -6,7 +6,7 @@ allprojects {
     group = "io.github.josemodi97"
     // Fallback must be kept in sync with the root pom.xml's <version> -
     // the Gradle and Maven builds compile the same source tree independently.
-    version = project.findProperty("sageActiveVersion") as String? ?: "0.1.0-SNAPSHOT"
+    version = project.findProperty("sageActiveVersion") as String? ?: "0.1.0"
 
     repositories {
         mavenCentral()

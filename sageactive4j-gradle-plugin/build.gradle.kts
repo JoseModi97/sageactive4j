@@ -9,7 +9,7 @@ group = "io.github.josemodi97"
 // of the reactor artifacts its tests compile the generated examples
 // against. Pass -PsageActiveVersion=X.Y.Z (the same property the root
 // build uses); the fallback must match the root pom.xml's <version>.
-val sageActiveVersion = project.findProperty("sageActiveVersion") as String? ?: "0.1.0-SNAPSHOT"
+val sageActiveVersion = project.findProperty("sageActiveVersion") as String? ?: "0.1.0"
 version = sageActiveVersion
 
 description = "Gradle plugin for sageactive4j: detects your project's framework (plain Java, " +
