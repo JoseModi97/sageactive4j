@@ -72,6 +72,55 @@ sageactive4j.oauth.success-url=/admin
 Then inject `SageActive4jClient` anywhere. With Actuator on the classpath,
 `/actuator/health` gains a `sageActive4j` component.
 
+## Command line
+
+```bash
+java -jar sageactive4j-cli-<version>-all.jar init
+```
+
+`init` asks for your app's keys and signs you in through the browser, then
+lets you pick an organization. After that:
+
+| Command | What it does |
+|---|---|
+| `sageactive4j test` | checks configuration, sign-in, organization and permissions |
+| `sageactive4j org` / `org set <id>` | lists organizations / selects one |
+| `sageactive4j query "{ userProfile { fullName } }"` | runs any GraphQL operation |
+| `sageactive4j invoice` / `invoice create ...` | lists invoices / creates one (sandbox profiles only) |
+| `sageactive4j env [profile]` | lists profiles / switches between them |
+| `sageactive4j login` / `logout` | signs in again / revokes and deletes tokens |
+
+The CLI redirects your browser to `http://127.0.0.1:8765/callback` after
+sign-in, so register that redirect URI for your app in the Sage Developer
+Center.
+
+## Scaffold an example
+
+Run this in your own project to get a working starting point:
+
+```bash
+mvn io.github.josemodi97:sageactive4j-maven-plugin:init
+```
+
+Or, with Gradle, apply `id("io.github.josemodi97.sageactive4j")` and run:
+
+```bash
+./gradlew sageactive4jInit
+```
+
+The plugin detects your framework from your dependencies and writes:
+
+| Framework | Generated |
+|---|---|
+| plain Java | `sageactive4j/SageActiveExample.java`: prints your profile and first customers |
+| javax / jakarta servlet | `sageactive4j/SageActiveServlet.java`: sign-in at `/sage/login`, then `/sage/me` |
+| Spring Boot 2 / 3 | `sageactive4j/SageController.java` (`GET /sage/accounting/accounts`, `POST /sage/sales/invoice`) and `sageactive4j.properties` |
+
+It then prints the remaining steps, including the dependency to add if you
+don't have it yet. To pick the framework yourself, pass
+`-Dsageactive4j.framework=jakarta` (Maven) or `--framework=jakarta` (Gradle).
+Existing files are kept unless you add `-Dsageactive4j.force=true` / `--force`.
+
 ## Building
 
 Either build tool works from the same source tree; both need a JDK 11+ to
@@ -83,6 +132,13 @@ build (the output runs on Java 8+).
 
 ```bash
 mvn verify
+```
+
+The Gradle plugin is a separate build. Its tests compile against the main
+build's artifacts, so publish those first:
+
+```bash
+./gradlew publishToMavenLocal && cd sageactive4j-gradle-plugin && ./gradlew build
 ```
 
 ## License

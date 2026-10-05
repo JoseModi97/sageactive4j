@@ -14,9 +14,10 @@ namespace, and API design.
 | `sageactive4j-jakarta` | ✅ Phase 3 | `jakarta.servlet` equivalent, for Tomcat 10+, Spring Boot 3, Jakarta EE 9+. Java 11. |
 | `sageactive4j-spring-boot2-starter` | ✅ Phase 3 | Auto-configured `SageActive4jClient` and `TokenStore`, `sageactive4j.*` properties with IDE metadata, actuator health, opt-in sign-in endpoints publishing events. Spring Boot 2.x, Java 8. |
 | `sageactive4j-spring-boot3-starter` | ✅ Phase 3 | Same, for Spring Boot 3.x (Jakarta namespace, Java 17 floor). |
-| `sageactive4j-cli` | ⏳ Planned | picocli tool (`sageactive4j`): `init`, `login`, `env`, `test`, `org`, `query`, `invoice`. Fat jar + GraalVM native-image binary. |
-| `sageactive4j-maven-plugin` | ⏳ Planned | `mvn io.github.josemodi97:sageactive4j-maven-plugin:init` — detects the consuming project's framework and scaffolds a working example. |
-| `sageactive4j-gradle-plugin` | ⏳ Planned | `./gradlew sageactive4jInit` — same scaffolding, as a standalone Gradle build. |
+| `sageactive4j-cli` | ✅ Phase 4 | picocli tool (`sageactive4j`): `init`, `login`, `logout`, `env`, `test`, `org`, `query`, `invoice`. Fat jar (Java 8+) + GraalVM native-image binary (built in CI). |
+| `sageactive4j-maven-plugin` | ✅ Phase 5 | `mvn io.github.josemodi97:sageactive4j-maven-plugin:init` — detects the consuming project's framework and scaffolds a working example. |
+| `sageactive4j-gradle-plugin` | ✅ Phase 5 | `./gradlew sageactive4jInit` — same scaffolding, as a standalone Gradle build. |
+| `sageactive4j-scaffold` | ✅ Phase 5 | Not an artifact: detection, file writing and templates, compiled into both plugins as shared source. |
 | `sageactive4j-bom` | 🚧 Skeleton (Phase 0) | Bill-of-materials pinning matching versions of every library module. |
 
 **Phase 0 verification (2026-10-05)**: `./gradlew build` green locally
@@ -55,6 +56,35 @@ the new CI job does). Class files checked: Java 8 bytecode (major 52) for
 `-servlet` and the Boot 2 starter, 55 for `-jakarta`, 61 for the Boot 3
 starter. The four new Maven POMs are written but, like the rest of the Maven
 build, have **not been run locally** (no `mvn` here).
+
+**Phase 4 verification (2026-10-05)**: CLI 31 tests, 0 failures (1
+POSIX-only skip); the whole build is 245 tests, all green. The fat jar
+passes `jar --validate` and ran `sageactive4j test` against a stub on JDK 21
+and JDK 11. **Not run here**:
+- the GraalVM native build (no GraalVM or MSVC on this machine); CI's new
+  `native-image-build` job builds it and runs `test` with the binary
+- the fat jar on a real Java 8 JVM (CI)
+- Maven (since run: see Phase 5)
+- a sandbox run
+
+**Phase 5 verification (2026-10-05)**: the **first local Maven run** (Maven
+3.9.16, JDK 21): `mvn install` of the whole reactor is green, with the same
+test counts as Gradle (core 162 on both transports, servlet 11, jakarta 11,
+Boot 2 15, Boot 3 15, CLI 31), plus the Maven plugin's 25 unit tests and 2
+`maven-invoker` projects. The standalone Gradle plugin build passes 24
+tests, 4 of them TestKit builds. Both plugins run the same shared tests,
+including one that compiles every generated example with `-Werror` at the
+framework's Java floor (8, or 11 for jakarta). A broken template was
+confirmed to fail that test. Checked by hand, not in CI: the scaffolded
+Spring Boot 3 app was started with dummy credentials. `@PropertySource`
+loaded the file, the env placeholders resolved, and `/sage/oauth/login`
+redirected to SBC Auth with PKCE. The accounts endpoint answered "no token
+available", as expected before sign-in. Found along the way: the root
+`gradlew` was committed without its executable bit, so every `./gradlew` CI
+job would have failed on Linux (fixed in the index). Not done: the Gradle
+plugin on Gradle versions other than 8.11.1, and the Boot 2 example
+compiled against Spring 6 (it uses only annotations shared by Spring 5 and 6,
+and is compiled against 5.3).
 
 Why core first: every other module is a thin adapter around it. A correct,
 well-tested core (auth, transport, JSON, retries) lets every adapter and tool
@@ -403,39 +433,92 @@ of the Boot 3 starter (Java 17, jakarta, `@AutoConfiguration` +
 
 ### 5.3 CLI (`sageactive4j`)
 
-The CLI is picocli-based. A shared `CredentialsMixin` resolves settings in
-this order: flag → `SAGEACTIVE4J_*` env var →
-`~/.sageactive4j/config.properties`.
+The CLI is picocli-based, with Java 8 main code. Global options
+(`--profile`, `--region`, `--subscription-key`, `--organization`,
+`--client-id`, `--client-secret`, `--access-token`, `--home`, `--verbose`)
+are inherited, so they work before or after the subcommand. Every setting
+resolves in this order: flag, then the `SAGEACTIVE4J_*` env var, then the
+profile in `<home>/config.properties`. `<home>` is `--home`, else
+`SAGEACTIVE4J_HOME`, else `~/.sageactive4j`. Both the profiles file and the
+per-profile token files (`tokens-<profile>.properties`) are written
+atomically and owner-only.
 
 | Command | Behaviour |
 |---|---|
-| `init` | Interactive wizard: profile name, region, keys. Runs `login`, lists organizations to pick from, then writes the profile. |
-| `login` | Opens the browser to the authorization URL, captures the code on a loopback `HttpServer` (`http://127.0.0.1:<port>/callback`), and stores tokens with `FileTokenStore`. |
-| `env [profile]` | Shows or switches the active credential profile (e.g. `sandbox`, `production`: each its own subscription key, tokens and organization; see §4.1 on why this isn't a URL switch). |
-| `test` | Checks connectivity, user profile, and `checkAccessPolicy`. Prints a pass/fail table and exits non-zero on failure. |
-| `org` / `org set <id>` | Lists organizations / switches the active one. |
-| `query "<gql>"` / `query -f file.graphql [--var k=v]` | Runs a raw query and pretty-prints the JSON. |
-| `invoice list` / `invoice create` | Lists recent invoices / creates and posts a test invoice. `create` refuses to run unless the active profile is marked `sandbox: true`, or `--yes-really` is passed. |
-| `version` | Prints the CLI version. |
+| `init` | Wizard: profile name, region, subscription key and client secret (no echo on a terminal), client id, redirect URI, sandbox flag. It then optionally signs in and picks a usable organization. Every answer can be passed as a flag (`--no-login`, `--sandbox`, …) for scripting. Empty answers keep existing values. |
+| `login` | RFC 8252 desktop sign-in: a one-shot loopback listener on the profile's redirect URI (default `http://127.0.0.1:8765/callback`, which must be registered for the app). It uses PKCE and a single-use `state`; forged or stray callbacks get a 400 while the real one is still awaited. The browser opens through the OS launcher (no AWT, so it works natively). Also `--no-browser` and `--timeout`. |
+| `logout` | Revokes the refresh token at SBC Auth and deletes the token file. If revocation fails, the file is still deleted. |
+| `env [profile]` | Lists profiles (region, organization, sandbox, signed-in), or switches the active one. A profile is a full credential set, so sandbox and production stay separate (§4.1). |
+| `test` | PASS/WARN/FAIL/SKIP table: configuration, sign-in, `userProfile`, organization (`organizationDetail`), permissions (`userAccessPolicyCheck`). Exits 1 on any FAIL, so it doubles as a CI or deployment probe. |
+| `org` / `org set <id>` | Lists organizations (`*` = selected, with usability). `set` validates the id is yours and usable (`--force` skips the check). |
+| `query "<gql>"` / `query -f file.graphql [--var k=v] [--raw] [--no-org]` | Runs any operation and pretty-prints `data`. `--var` values are parsed as JSON when valid, otherwise used as strings. GraphQL errors go to stderr with exit 1. |
+| `invoice [--first N]` / `invoice create --customer --product --price [--quantity] [--journal]` | Lists invoices, or creates, numbers and posts a one-line invoice. `create` refuses unless the profile is marked `sandbox`, or `--yes-really` is passed. |
+| `--version` | CLI/SDK version (a flag, not a subcommand). |
 
-The CLI is distributed as a Shade/Shadow fat jar and as GraalVM
-native-image binaries (Linux/macOS/Windows), attached to GitHub Releases.
+Distribution:
+
+- **Fat jar** (Shadow/Shade, `-all` classifier). It keeps core's Java 11+
+  transport active through `Multi-Release: true`, drops core's
+  `module-info`s, and runs on Java 8+.
+- **GraalVM native binary** (`nativeCompile` / `-Pnative`). picocli generates
+  the reflection config, and **core ships its own native-image resource
+  config** for the `.graphql` documents and version file, so any native app
+  using the SDK works, not just the CLI.
+
+Native binaries are to be attached to GitHub Releases in Phase 7.
 
 ### 5.4 Maven & Gradle scaffolding plugins
 
-- `FrameworkDetector` reads the consuming project's dependencies and returns
-  one of: Spring Boot 2, Spring Boot 3, Jakarta servlet, javax servlet, or
-  plain Java.
-- `FrameworkExample` writes a working example for that framework:
-  - **Spring Boot**: an `application.properties` block plus a `SageController`
-    with `/accounting/accounts` and `/sales/invoice` endpoints.
-  - **Plain Java**: a `Main` class that prints the user profile and customers.
-- Both plugins refuse to overwrite existing files without `-Dforce` /
-  `--force`.
+- **Shared source, not copies.** Detection, file writing and the templates
+  live once in `sageactive4j-scaffold/` (package `.scaffold`, Java 8, no
+  build-tool types). The Maven plugin adds it via `build-helper-maven-plugin`,
+  and the Gradle build via `srcDir`. Its tests run in both builds too.
+  Sister projects keep hand-synced copies of the same logic in each plugin;
+  this layout means the two plugins can't drift.
+- `FrameworkDetector` takes the project's declared coordinates and returns
+  `plain`, `servlet`, `jakarta`, `spring-boot2` or `spring-boot3`, plus a
+  reason the plugins log. Nothing is resolved. Maven passes its dependencies
+  (managed versions already filled in), managed dependencies (a Boot BOM
+  import) and the parent POM. Gradle passes every configuration's
+  dependencies, plus the Spring Boot Gradle plugin with its version. Gradle
+  needs that plugin version because the starters themselves carry no version
+  there. The Boot major comes from any versioned `org.springframework.boot`
+  coordinate. Otherwise the servlet namespace (jakarta → 3, javax → 2)
+  decides, and failing that it is Boot 3, with a logged warning. Boot 4+ gets
+  the Boot 3 starter, also with a warning.
+- `Scaffolder` writes, into a `sageactive4j` package the user is told to
+  move:
+  - **plain**: `SageActiveExample` (`main`: profile, first 20 customers;
+    `fromEnvironment()`).
+  - **servlet / jakarta**: `SageActiveServlet` on `/sage/*`: `login`
+    (`SageOAuthFlow.redirect`), `callback` (`SageOAuthCallbackHandler`, then
+    redirects to `me`) and `me`. A single template, rendered for either
+    namespace.
+  - **Spring Boot 2 / 3**: `SageController` (`GET /sage/accounting/accounts`,
+    `POST /sage/sales/invoice` → `createAndPostInvoice`). It has explicit
+    `@RequestParam` names, because Spring 6.1 needs `-parameters` otherwise.
+    Also `sageactive4j.properties`, loaded by the controller's
+    `@PropertySource`, with secrets as `${SAGEACTIVE4J_…:}` placeholders, so
+    the file is safe to commit. An unset key fails startup with the core's
+    configuration message. It is a separate file, not an
+    `application.properties` block, because the plugins never edit an
+    existing file.
+- Existing files are skipped, with a log line, unless `-Dsageactive4j.force=true`
+  / `--force`. The plugins then print next steps, including the dependency
+  to add (at the plugin's own version) when it isn't declared yet.
+- **Maven**: goal `init`, prefix `sageactive4j`. Parameters:
+  `sageactive4j.framework` (`auto`), `.force`, `.javaSourceDirectory`,
+  `.resourceDirectory`. A bad framework is a `MojoFailureException`.
+- **Gradle**: the task `sageactive4jInit`, with `--framework` and `--force`
+  options. It tracks no state (it writes only what's missing, so "up to date"
+  is meaningless), and is configuration-cache compatible: the declared
+  coordinates are a `ListProperty<String>`. Its version comes from a
+  generated `version.properties`, not the jar manifest, so it holds under
+  TestKit too.
 - The Gradle plugin is a **standalone Gradle build** (its own
-  `settings.gradle.kts`). In tests it resolves the reactor's artifacts via
-  `mavenLocal()`, keyed off a single `-PsageActiveVersion` property, so the
-  version can't drift.
+  `settings.gradle.kts` and wrapper). In tests it resolves the reactor's
+  artifacts via `mavenLocal()`, keyed off a single `-PsageActiveVersion`
+  property, so the version can't drift.
 
 ## 6. Build, CI, release
 
@@ -507,10 +590,28 @@ native-image binaries (Linux/macOS/Windows), attached to GitHub Releases.
   - missing code
   - exchange failure (502)
   - never overwriting a committed response
-- **CLI**: real `CommandLine.execute(...)` with captured stdout, plus the
-  `login` loopback flow against the stub auth server.
-- **Plugins**: plain JUnit `FrameworkDetector` tests and a Gradle TestKit
-  functional test that compiles the generated example.
+- **CLI**: the real picocli command line with captured streams, a temp home
+  and a fake Sage covering:
+  - every command
+  - flag > env > profile precedence
+  - options after the subcommand
+  - the `invoice create` sandbox gate, with nothing sent when refused
+
+  For `login`, a simulated browser hits the real loopback listener with a
+  forged callback (400, not exchanged), then the real one. Decline, timeout,
+  non-loopback redirect and logout/revocation are covered too. The fat jar
+  and native binary are also smoke-tested with `test` against
+  `ci/smoke/GraphQLStub`, which exercises bundled resources and real HTTP.
+- **Plugins**:
+  - Shared tests (run in both builds): detector rules, skip/force, no
+    unrendered placeholders, and every generated class compiled for real
+    with `-Werror` at its framework's Java floor
+  - Maven: mojo unit tests, plus `maven-invoker` projects (`src/it/plain`,
+    `src/it/spring-boot3`) that run `init`, then `compile`, and check what
+    was detected and compiled
+  - Gradle: TestKit builds that detect plain Java (with the configuration
+    cache) and Boot 3 (from the Boot plugin's version alone), then compile,
+    plus CLI options and an unsupported framework
 - **Opt-in live tests**: `@Tag("live")`, run only when `SAGEACTIVE4J_*`
   sandbox credentials are present. They're never part of the default build.
 
@@ -522,8 +623,8 @@ native-image binaries (Linux/macOS/Windows), attached to GitHub Releases.
 | **1 — Core foundation** ✅ | Config, `Region`/`Environment`, exceptions, `JsonReader`/`JsonWriter`, `HttpTransport` (8 and 11 variants), `GraphQLTransport` with retry/401 replay, `SageAuthClient` + `TokenStore`, raw `execute(...)`. | Stub-server suite green; `jar --validate` passes; Java 8 smoke test passes. |
 | **2 — Typed domains** ✅ (live run pending) | §4.6 domain clients, models, inputs, `.graphql` resources, `Connection`/pagination, `async(...)`, multipart upload, mutation limit. | Fixture-based mapping tests for every operation; one live sandbox run of `test` + `invoice create`. |
 | **3 — Framework adapters** ✅ (sandbox call pending) | `-servlet`, `-jakarta`, both Spring Boot starters (incl. health and OAuth sign-in; webhooks dropped, §4.7). | Context-runner and handler tests green; sample Boot 2 and Boot 3 apps start and call the sandbox. |
-| **4 — CLI** | All §5.3 commands, fat jar, native image. | Native binary runs `init` → `test` → `invoice list` against the sandbox. |
-| **5 — Scaffolding plugins** | Maven `init` goal, standalone Gradle plugin. | Generated example compiles in a TestKit / `maven-invoker` project. |
+| **4 — CLI** ✅ (native build + sandbox run pending CI / credentials) | All §5.3 commands, fat jar, native image. | Native binary runs `init` → `test` → `invoice list` against the sandbox. |
+| **5 — Scaffolding plugins** ✅ | Maven `init` goal, standalone Gradle plugin. | Generated example compiles in a TestKit / `maven-invoker` project. |
 | **6 — Coverage expansion** | Further typed domains (quotes, orders, delivery notes, credit notes, OCR purchase ingestion, sales tariffs, addresses/contacts, trial balance / P&L / balance sheet), prioritized by usage. | Each added domain ships with fixtures and docs. |
 | **7 — Release** | Central publishing, Gradle Plugin Portal, README quickstarts (plain Java, Spring Boot, Jakarta, CLI), javadoc.io, CHANGELOG. | `0.1.0` resolvable from Maven Central. |
 

@@ -60,9 +60,30 @@ jobs:
         run: >
           ./gradlew --console=plain
           :sageactive4j-core:build :sageactive4j-servlet:build :sageactive4j-jakarta:build
-          :sageactive4j-spring-boot2-starter:build
+          :sageactive4j-spring-boot2-starter:build :sageactive4j-cli:build
+      # invoker.skip: the Maven plugin's integration tests need the excluded
+      # Boot 3 starter. Its unit tests (which compile every generated
+      # example) still run here.
       - name: Maven
-        run: mvn -B verify -pl '!sageactive4j-spring-boot3-starter'
+        run: mvn -B verify -pl '!sageactive4j-spring-boot3-starter' -Dinvoker.skip
+
+  gradle-plugin-build:
+    name: Gradle plugin (standalone build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      # The plugin's tests compile generated examples against the reactor's
+      # artifacts, and its TestKit builds resolve them, from mavenLocal.
+      - name: Publish the reactor to mavenLocal
+        run: ./gradlew publishToMavenLocal --console=plain
+      - name: Build and test the plugin
+        working-directory: sageactive4j-gradle-plugin
+        run: ./gradlew build --console=plain
 
   jdk8-runtime-smoke-test:
     name: Java 8 runtime smoke test
@@ -75,8 +96,8 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build the jar (release 8 bytecode)
-        run: ./gradlew :sageactive4j-core:jar --console=plain
+      - name: Build the jars (release 8 bytecode)
+        run: ./gradlew :sageactive4j-core:jar :sageactive4j-cli:shadowJar --console=plain
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -90,6 +111,16 @@ jobs:
           mkdir -p /tmp/smoke
           javac -cp "$JAR" -d /tmp/smoke ci/smoke/Smoke.java
           java -cp "$JAR:/tmp/smoke" Smoke HttpURLConnection
+      - name: Run the CLI fat jar on Java 8
+        run: |
+          CLI=$(find sageactive4j-cli/build/libs -name '*-all.jar')
+          javac -d /tmp/smoke ci/smoke/GraphQLStub.java
+          java -cp /tmp/smoke GraphQLStub 18771 &
+          sleep 2
+          java -jar "$CLI" --version
+          java -jar "$CLI" --home /tmp/cli-home --subscription-key k --access-token t \
+            --base-url http://127.0.0.1:18771 test | tee /tmp/cli-test.txt
+          grep -q "signed in as CI Smoke" /tmp/cli-test.txt
 
   mrjar-smoke-test:
     name: Multi-release jar smoke test (JPMS)
@@ -139,3 +170,32 @@ jobs:
         run: |
           JAR=$(find sageactive4j-core/build/libs -name 'sageactive4j-core-*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar')
           java -cp "$JAR:/tmp/module-smoke" Smoke HttpClient
+
+  native-image-build:
+    name: GraalVM native-image build (CLI)
+    runs-on: ubuntu-latest
+    needs: gradle-build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: "21"
+          distribution: "graalvm-community"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build the native binary
+        run: ./gradlew :sageactive4j-cli:nativeCompile --console=plain
+      - name: Smoke-test the real binary
+        # 'test' loads the SDK's bundled .graphql documents and makes real HTTP
+        # calls, so it proves the resource and reflection configs are complete.
+        run: |
+          BIN=sageactive4j-cli/build/native/nativeCompile/sageactive4j
+          "$BIN" --version
+          "$BIN" --help | grep -q "login"
+          "$BIN" --home /tmp/native-home env | grep -q "No profiles yet"
+          mkdir -p /tmp/stub && javac -d /tmp/stub ci/smoke/GraphQLStub.java
+          java -cp /tmp/stub GraphQLStub 18772 &
+          sleep 2
+          "$BIN" --home /tmp/native-home --subscription-key k --access-token t \
+            --base-url http://127.0.0.1:18772 test | tee /tmp/native-test.txt
+          grep -q "signed in as CI Smoke" /tmp/native-test.txt

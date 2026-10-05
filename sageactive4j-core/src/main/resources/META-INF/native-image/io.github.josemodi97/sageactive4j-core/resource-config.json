@@ -1,0 +1,8 @@
+{
+  "resources": {
+    "includes": [
+      { "pattern": "\\Qio/github/josemodi97/sageactive4j/queries/\\E[^/]+\\.graphql" },
+      { "pattern": "\\Qio/github/josemodi97/sageactive4j/version.properties\\E" }
+    ]
+  }
+}

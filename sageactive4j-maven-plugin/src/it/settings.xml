@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The integration tests run against an isolated local repository
+  (target/local-repo). This lets it fetch what the developer's own local
+  repository already has before going to Maven Central.
+-->
+<settings>
+  <profiles>
+    <profile>
+      <id>it-repo</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <repositories>
+        <repository>
+          <id>local.central</id>
+          <url>@localRepositoryUrl@</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>local.central</id>
+          <url>@localRepositoryUrl@</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>true</enabled></snapshots>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+</settings>

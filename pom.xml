@@ -58,9 +58,11 @@
     <module>sageactive4j-jakarta</module>
     <module>sageactive4j-spring-boot2-starter</module>
     <module>sageactive4j-spring-boot3-starter</module>
+    <module>sageactive4j-cli</module>
     <module>sageactive4j-bom</module>
-    <!-- The CLI and the Maven plugin are added as their phases land (PLAN.md §8).
-         sageactive4j-gradle-plugin will be a standalone Gradle build, not a Maven module. -->
+    <module>sageactive4j-maven-plugin</module>
+    <!-- sageactive4j-gradle-plugin is a standalone Gradle build (see that directory), not a Maven module.
+         sageactive4j-scaffold holds source shared by both plugins; it has no build of its own. -->
   </modules>
 
   <properties>

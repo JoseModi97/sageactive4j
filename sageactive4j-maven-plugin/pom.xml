@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.josemodi97</groupId>
+    <artifactId>sageactive4j-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>sageactive4j-maven-plugin</artifactId>
+  <packaging>maven-plugin</packaging>
+
+  <name>sageactive4j-maven-plugin</name>
+  <description>
+    Maven plugin for sageactive4j: detects your project's framework (plain Java,
+    javax/jakarta servlet, Spring Boot 2/3) and scaffolds a working Sage Active
+    example (mvn io.github.josemodi97:sageactive4j-maven-plugin:init).
+  </description>
+  <url>https://github.com/JoseModi97/sageactive4j</url>
+
+  <properties>
+    <maven.version>3.9.9</maven.version>
+    <maven-plugin-tools.version>3.15.1</maven-plugin-tools.version>
+    <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
+    <maven-invoker-plugin.version>3.9.0</maven-invoker-plugin.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <version>${maven.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-annotations</artifactId>
+      <version>${maven-plugin-tools.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- MavenProject, to read the consuming project's declared dependencies. -->
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-core</artifactId>
+      <version>${maven.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!--
+      Test-only: the generated examples are compiled for real against these
+      (ScaffolderTest). Spring Web 5.3 is Java 8 bytecode, so the check also
+      runs on the JDK 11 CI job; the annotations used are the same in Spring 6.
+    -->
+    <dependency>
+      <groupId>io.github.josemodi97</groupId>
+      <artifactId>sageactive4j-servlet</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.josemodi97</groupId>
+      <artifactId>sageactive4j-jakarta</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>4.0.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-webmvc</artifactId>
+      <version>5.3.31</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!--
+        The framework detection, file writing and templates live in
+        ../sageactive4j-scaffold, shared as source with the standalone Gradle
+        plugin build so the two plugins can't generate different code.
+      -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>${build-helper-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>add-scaffold-sources</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.basedir}/../sageactive4j-scaffold/src/main/java</source>
+              </sources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>add-scaffold-resources</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>add-resource</goal>
+            </goals>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>${project.basedir}/../sageactive4j-scaffold/src/main/resources</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>add-scaffold-test-sources</id>
+            <phase>generate-test-sources</phase>
+            <goals>
+              <goal>add-test-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.basedir}/../sageactive4j-scaffold/src/test/java</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <version>${maven-plugin-tools.version}</version>
+        <configuration>
+          <goalPrefix>sageactive4j</goalPrefix>
+        </configuration>
+      </plugin>
+      <!--
+        src/it: real consumer projects that run `init`, then `compile`, and
+        check (verify.groovy) what was detected, written and compiled.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-invoker-plugin</artifactId>
+        <version>${maven-invoker-plugin.version}</version>
+        <configuration>
+          <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+          <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+          <settingsFile>src/it/settings.xml</settingsFile>
+          <postBuildHookScript>verify</postBuildHookScript>
+          <showErrors>true</showErrors>
+          <extraArtifacts>
+            <extraArtifact>io.github.josemodi97:sageactive4j-core:${project.version}</extraArtifact>
+            <extraArtifact>io.github.josemodi97:sageactive4j-spring-boot3-starter:${project.version}</extraArtifact>
+          </extraArtifacts>
+        </configuration>
+        <executions>
+          <execution>
+            <id>integration-test</id>
+            <goals>
+              <goal>install</goal>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>

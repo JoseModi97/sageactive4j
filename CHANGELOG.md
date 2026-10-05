@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- `sageactive4j-maven-plugin` (`mvn io.github.josemodi97:sageactive4j-maven-plugin:init`)
+  and the `io.github.josemodi97.sageactive4j` Gradle plugin (`./gradlew sageactive4jInit`).
+  - Detect the project's framework (plain Java, javax/jakarta servlet,
+    Spring Boot 2/3) from its declared dependencies, parent POM, BOM imports
+    or Spring Boot Gradle plugin, and log the guess.
+  - Write a working example: a `main` (plain), a sign-in servlet (servlet,
+    jakarta), or a `SageController` plus `sageactive4j.properties` with
+    secrets read from environment variables (Spring Boot).
+  - Never overwrite existing files without `-Dsageactive4j.force=true` / `--force`.
+  - List next steps, including the dependency to add when it's missing.
+  - Both plugins compile the same shared source (`sageactive4j-scaffold`).
+- `sageactive4j-cli`: the `sageactive4j` command (`init`, `login`, `logout`,
+  `env`, `test`, `org`, `query`, `invoice`).
+  - Named profiles with per-profile tokens; flag > env > profile precedence.
+  - Loopback browser sign-in with PKCE.
+  - A sandbox gate on `invoice create`.
+  - Fat jar (Java 8+) and a GraalVM native binary.
+- `sageactive4j-core` now ships a GraalVM resource config, so native images
+  include its GraphQL documents.
 - `sageactive4j-servlet` (javax, Java 8) and `sageactive4j-jakarta`
   (Java 11): `SageOAuthFlow` for browser sign-in (session-bound,
   single-use, expiring `state`; PKCE) and `SageOAuthCallbackHandler`.
@@ -56,4 +75,8 @@ adheres to [Semantic Versioning](https://semver.org/).
   `sageactive4j-bom`.
 - `SageActive4j.version()` / `SageActive4j.userAgent()`.
 - CI (Gradle and Maven on JDK 11/17/21, Java 8 runtime smoke test,
-  multi-release jar/JPMS smoke test) and a Maven Central release workflow.
+  multi-release jar/JPMS smoke test, standalone Gradle plugin build) and a
+  Maven Central release workflow.
+
+### Fixed
+- `gradlew` is now committed as executable, so `./gradlew` works on Linux CI runners.
