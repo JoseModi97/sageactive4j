@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-05
+
 ### Added
 - Phase 6 domain coverage expansion:
   - `sales().quotes(...)`, `allQuotes(...)`, and `createQuote(...)`: strongly typed sales quotes query and creation.

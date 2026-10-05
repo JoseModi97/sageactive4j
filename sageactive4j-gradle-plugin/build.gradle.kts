@@ -57,6 +57,7 @@ tasks.withType<Javadoc>().configureEach {
 // shipped, and need Java 11 for the jakarta adapter on their classpath.
 tasks.named<JavaCompile>("compileJava") {
     options.release.set(8)
+    options.compilerArgs.add("-Xlint:-options")
 }
 tasks.named<JavaCompile>("compileTestJava") {
     options.release.set(11)

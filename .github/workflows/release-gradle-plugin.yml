@@ -1,0 +1,56 @@
+name: Release Gradle Plugin
+
+# Publishes the Gradle plugin (sageactive4j-gradle-plugin) to the Gradle Plugin
+# Portal when a `vX.Y.Z` tag is pushed or via manual dispatch.
+#
+# Required repository secrets:
+#   GRADLE_PUBLISH_KEY, GRADLE_PUBLISH_SECRET - Gradle Plugin Portal API credentials
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: build and test the plugin without publishing to the Portal."
+        type: boolean
+        default: true
+
+jobs:
+  publish-plugin:
+    name: Publish to Gradle Plugin Portal
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Extract version from tag or fallback
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
+          else
+            TAG_VERSION=$(grep '<version>' pom.xml | head -1 | sed -E 's/.*<version>([^<]+)<\/version>.*/\1/' | sed 's/-SNAPSHOT//')
+          fi
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Publish reactor artifacts to mavenLocal for plugin integration tests
+        run: ./gradlew publishToMavenLocal -PsageActiveVersion=${{ steps.version.outputs.version }}
+
+      - name: Build and test Gradle plugin
+        working-directory: sageactive4j-gradle-plugin
+        run: ./gradlew check -PsageActiveVersion=${{ steps.version.outputs.version }}
+
+      - name: Publish plugin to Gradle Plugin Portal
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
+        working-directory: sageactive4j-gradle-plugin
+        run: ./gradlew publishPlugins -PsageActiveVersion=${{ steps.version.outputs.version }}
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}

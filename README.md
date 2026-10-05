@@ -1,16 +1,47 @@
 # sageactive4j
 
 [![CI](https://github.com/JoseModi97/sageactive4j/actions/workflows/ci.yml/badge.svg)](https://github.com/JoseModi97/sageactive4j/actions/workflows/ci.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.josemodi97/sageactive4j-core.svg)](https://central.sonatype.com/artifact/io.github.josemodi97/sageactive4j-core)
+[![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.josemodi97.sageactive4j.svg)](https://plugins.gradle.org/plugin/io.github.josemodi97.sageactive4j)
+[![Javadoc](https://javadoc.io/badge2/io.github.josemodi97/sageactive4j-core/javadoc.svg)](https://javadoc.io/doc/io.github.josemodi97/sageactive4j-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A dependency-free Java SDK for the **Sage Active Public API V2** (GraphQL), with
 servlet, Jakarta, and Spring Boot adapters, a CLI, and Maven/Gradle scaffolding
 plugins. Java 8+.
 
-> **Status: early development.** The core SDK (auth, transport, typed
-> domain clients) is built and tested against Sage's documented request and
-> response shapes, but not yet against a live tenant. Nothing is published
-> yet. See [PLAN.md](PLAN.md) for the architecture and roadmap.
+## Installation
+
+### Maven
+Import the BOM to align module versions:
+```xml
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>io.github.josemodi97</groupId>
+      <artifactId>sageactive4j-bom</artifactId>
+      <version>0.1.0</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+
+<dependencies>
+  <dependency>
+    <groupId>io.github.josemodi97</groupId>
+    <artifactId>sageactive4j-core</artifactId>
+  </dependency>
+</dependencies>
+```
+
+### Gradle
+```kotlin
+dependencies {
+    implementation(platform("io.github.josemodi97:sageactive4j-bom:0.1.0"))
+    implementation("io.github.josemodi97:sageactive4j-core")
+}
+```
 
 ## Quick look
 
@@ -71,6 +102,27 @@ sageactive4j.oauth.success-url=/admin
 
 Then inject `SageActive4jClient` anywhere. With Actuator on the classpath,
 `/actuator/health` gains a `sageActive4j` component.
+
+## Jakarta & javax Servlet
+
+Add `sageactive4j-jakarta` (Jakarta EE 9+, Spring 6, Tomcat 10+) or `sageactive4j-servlet` (Java EE 8, Spring 5, Tomcat 9-) to handle SBC Auth browser login with PKCE and session-bound CSRF protection:
+
+```java
+SageAuthClient auth = new SageAuthClient(config);
+URI redirectUri = URI.create("https://app.example.com/sage/callback");
+
+// 1. In your login servlet: redirect user to Sage with PKCE challenge
+SageOAuthFlow flow = new SageOAuthFlow(auth, redirectUri);
+flow.start(request, response);
+
+// 2. In your callback servlet: validate state, exchange code, and persist tokens
+SageOAuthCallbackHandler handler = new SageOAuthCallbackHandler(
+    auth,
+    redirectUri,
+    token -> tokenStore.store(token)
+);
+handler.handle(request, response);
+```
 
 ## Command line
 

@@ -626,7 +626,7 @@ Native binaries are to be attached to GitHub Releases in Phase 7.
 | **4 — CLI** ✅ (native build + sandbox run pending CI / credentials) | All §5.3 commands, fat jar, native image. | Native binary runs `init` → `test` → `invoice list` against the sandbox. |
 | **5 — Scaffolding plugins** ✅ | Maven `init` goal, standalone Gradle plugin. | Generated example compiles in a TestKit / `maven-invoker` project. |
 | **6 — Coverage expansion** ✅ | Further typed domains (quotes, orders, credit notes, OCR purchase ingestion, sales tariffs, taxes, tax groups, tax treatments, payment terms). | Each added domain ships with fixtures and docs; all 279 tests pass. |
-| **7 — Release** | Central publishing, Gradle Plugin Portal, README quickstarts (plain Java, Spring Boot, Jakarta, CLI), javadoc.io, CHANGELOG. | `0.1.0` resolvable from Maven Central. |
+| **7 — Release** ✅ | Central publishing, Gradle Plugin Portal, README quickstarts (plain Java, Spring Boot, Jakarta, CLI), javadoc.io, CHANGELOG. | All release artifacts, workflows, POMs/plugins, and docs verified. |
 
 ## 9. Open questions
 

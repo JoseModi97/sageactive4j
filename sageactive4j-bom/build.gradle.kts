@@ -18,7 +18,7 @@ dependencies {
         api(project(":sageactive4j-jakarta"))
         api(project(":sageactive4j-spring-boot2-starter"))
         api(project(":sageactive4j-spring-boot3-starter"))
-        // Add each library module here as it lands (PLAN.md §8).
+        api(project(":sageactive4j-cli"))
     }
 }
 
