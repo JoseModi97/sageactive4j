@@ -117,6 +117,30 @@ public final class SageActive4jClient implements AutoCloseable {
         this.localization = new LocalizationClient(this);
     }
 
+    /** Shortcut to {@link SageActive4jConfig#builder()}. */
+    public static SageActive4jConfig.Builder builder() {
+        return SageActive4jConfig.builder();
+    }
+
+    /** Quick-start factory method mirroring {@code SageActiveClient.Create(...)}. */
+    public static SageActive4jClient create(String subscriptionKey, String accessToken, Region region) {
+        return new SageActive4jClient(SageActive4jConfig.builder()
+                .subscriptionKey(subscriptionKey)
+                .accessToken(accessToken)
+                .region(region)
+                .build());
+    }
+
+    /** Quick-start factory method with organization id. */
+    public static SageActive4jClient create(String subscriptionKey, String accessToken, String organizationId, Region region) {
+        return new SageActive4jClient(SageActive4jConfig.builder()
+                .subscriptionKey(subscriptionKey)
+                .accessToken(accessToken)
+                .organizationId(organizationId)
+                .region(region)
+                .build());
+    }
+
     /** A client from {@code SAGEACTIVE4J_*} environment variables. */
     public static SageActive4jClient fromEnvironment() {
         return new SageActive4jClient(SageActive4jConfig.fromEnvironment());

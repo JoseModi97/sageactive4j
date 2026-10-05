@@ -501,5 +501,10 @@ public final class SageActive4jConfig {
         public SageActive4jConfig build() {
             return new SageActive4jConfig(this);
         }
+
+        /** Builds this configuration and returns a ready-to-use {@link SageActive4jClient}. */
+        public SageActive4jClient buildClient() {
+            return new SageActive4jClient(build());
+        }
     }
 }

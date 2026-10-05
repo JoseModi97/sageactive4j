@@ -23,11 +23,12 @@ import picocli.CommandLine.ScopeType;
         name = "sageactive4j",
         mixinStandardHelpOptions = true,
         versionProvider = SageActive4jCli.Version.class,
-        description = {"Command-line companion to the sageactive4j SDK for the Sage Active Public API V2.",
-            "Settings: --flag > SAGEACTIVE4J_* environment variable > profile (see 'env')."},
+        description = "Command-line companion to the sageactive4j SDK for the Sage Active Public API V2.",
         subcommands = {InitCommand.class, LoginCommand.class, LogoutCommand.class, EnvCommand.class,
-            TestCommand.class, OrgCommand.class, QueryCommand.class, InvoiceCommand.class,
-            CommandLine.HelpCommand.class})
+            TestCommand.class, OrgCommand.class, CustomerCommand.class, AccountCommand.class,
+            InvoiceCommand.class, QuoteCommand.class, OrderCommand.class, CreditNoteCommand.class,
+            BankCommand.class, ProductCommand.class, TaxCommand.class, FileCommand.class,
+            OcrCommand.class, QueryCommand.class, CommandLine.HelpCommand.class})
 public final class SageActive4jCli implements Runnable {
 
     final CliContext context;

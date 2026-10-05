@@ -198,4 +198,61 @@ class ApiCommandsTest extends CliTestSupport {
         assertEquals(0, run("invoice", "create", "--customer", "c", "--product", "p", "--price", "1",
                 "--journal", "j", "--yes-really").exitCode);
     }
+
+    @Test
+    void customerListTable() {
+        profile("p", "access-token", "t", "organization-id", "org-a");
+        sage.on("customers", "{\"customers\":{\"nodes\":[{\"code\":\"C001\",\"socialName\":\"Acme Corp\",\"status\":\"ENABLED\"}],\"totalCount\":1}}");
+        Run r = run("customer");
+        assertEquals(0, r.exitCode, r.toString());
+        assertTrue(r.out.contains("C001"), r.out);
+        assertTrue(r.out.contains("Acme Corp"), r.out);
+    }
+
+    @Test
+    void accountListTable() {
+        profile("p", "access-token", "t", "organization-id", "org-a");
+        sage.on("accountingAccounts", "{\"accountingAccounts\":{\"nodes\":[{\"code\":\"411000\",\"name\":\"Clients\",\"accountLevel\":\"SUB_ACCOUNT\",\"deactivated\":false}],\"totalCount\":1}}");
+        Run r = run("account");
+        assertEquals(0, r.exitCode, r.toString());
+        assertTrue(r.out.contains("411000"), r.out);
+        assertTrue(r.out.contains("Clients"), r.out);
+    }
+
+    @Test
+    void quoteListTable() {
+        profile("p", "access-token", "t", "organization-id", "org-a");
+        sage.on("salesQuotes", "{\"salesQuotes\":{\"nodes\":[{\"operationalNumber\":\"Q-001\",\"status\":\"Pending\",\"totalNet\":100.0}],\"totalCount\":1}}");
+        Run r = run("quote");
+        assertEquals(0, r.exitCode, r.toString());
+        assertTrue(r.out.contains("Q-001"), r.out);
+    }
+
+    @Test
+    void orderListTable() {
+        profile("p", "access-token", "t", "organization-id", "org-a");
+        sage.on("salesOrders", "{\"salesOrders\":{\"nodes\":[{\"operationalNumber\":\"ORD-001\",\"status\":\"Pending\",\"totalLiquid\":150.0}],\"totalCount\":1}}");
+        Run r = run("order");
+        assertEquals(0, r.exitCode, r.toString());
+        assertTrue(r.out.contains("ORD-001"), r.out);
+    }
+
+    @Test
+    void bankListTable() {
+        profile("p", "access-token", "t", "organization-id", "org-a");
+        sage.on("bankAccounts", "{\"bankAccounts\":[{\"id\":\"b1\",\"iban\":\"FR7612345\",\"bankName\":\"BNP Paribas\"}]}");
+        Run r = run("bank", "accounts");
+        assertEquals(0, r.exitCode, r.toString());
+        assertTrue(r.out.contains("FR7612345"), r.out);
+        assertTrue(r.out.contains("BNP Paribas"), r.out);
+    }
+
+    @Test
+    void taxListTable() {
+        profile("p", "access-token", "t", "organization-id", "org-a");
+        sage.on("taxes", "{\"taxes\":{\"nodes\":[{\"id\":\"t1\",\"name\":\"TVA 20%\",\"percentage\":20.0,\"inactive\":false}],\"totalCount\":1}}");
+        Run r = run("tax");
+        assertEquals(0, r.exitCode, r.toString());
+        assertTrue(r.out.contains("TVA 20%"), r.out);
+    }
 }
