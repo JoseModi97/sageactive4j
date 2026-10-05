@@ -16,6 +16,7 @@ dependencies {
     compileOnly("org.springframework:spring-webmvc:5.3.31")
     compileOnly("org.springframework.boot:spring-boot-actuator:$springBootVersion")
     compileOnly("javax.servlet:javax.servlet-api:4.0.1")
+    compileOnly("com.fasterxml.jackson.core:jackson-annotations:2.13.5")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
 
     testImplementation(platform("org.springframework.boot:spring-boot-dependencies:$springBootVersion"))

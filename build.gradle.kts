@@ -28,6 +28,7 @@ subprojects {
         // Modules with a higher framework-imposed floor override this.
         options.release.set(8)
         options.encoding = "UTF-8"
+        options.compilerArgs.add("-Xlint:-options")
     }
 
     tasks.withType<Javadoc>().configureEach {
