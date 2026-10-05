@@ -1,0 +1,13 @@
+query ($first: Int, $after: String{{vars}}) {
+  taxGroups({{args}}) {
+    nodes {
+      id
+      name
+      taxGroupCode
+      taxType
+      vatTaxation
+    }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

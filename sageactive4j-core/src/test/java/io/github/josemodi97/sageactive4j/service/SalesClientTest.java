@@ -12,11 +12,17 @@ import io.github.josemodi97.sageactive4j.graphql.ListOptions;
 import io.github.josemodi97.sageactive4j.input.OpenItemSettlementInput;
 import io.github.josemodi97.sageactive4j.input.SalesInvoiceInput;
 import io.github.josemodi97.sageactive4j.input.SalesInvoiceLineInput;
+import io.github.josemodi97.sageactive4j.input.SalesOrderInput;
+import io.github.josemodi97.sageactive4j.input.SalesOrderLineInput;
+import io.github.josemodi97.sageactive4j.input.SalesQuoteInput;
+import io.github.josemodi97.sageactive4j.input.SalesQuoteLineInput;
 import io.github.josemodi97.sageactive4j.internal.JsonReader;
 import io.github.josemodi97.sageactive4j.model.AccountingPosting;
 import io.github.josemodi97.sageactive4j.model.InvoicePosting;
 import io.github.josemodi97.sageactive4j.model.OpenItem;
 import io.github.josemodi97.sageactive4j.model.SalesInvoice;
+import io.github.josemodi97.sageactive4j.model.SalesOrder;
+import io.github.josemodi97.sageactive4j.model.SalesQuote;
 import io.github.josemodi97.sageactive4j.testsupport.DomainTestSupport;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -228,5 +234,66 @@ class SalesClientTest extends DomainTestSupport {
         assertThrows(IllegalArgumentException.class, () -> sage.sales().settleOpenItems(new OpenItemSettlementInput()
                 .entryDate(LocalDate.now()).paymentMethodId("pm").thirdPartyId("c")));
         assertThrows(IllegalArgumentException.class, () -> new OpenItemSettlementInput().pay("oi", BigDecimal.ZERO));
+    }
+
+    @Test
+    void quotesAndCreateQuote() {
+        respond("{\"salesQuotes\":{\"nodes\":[{\"id\":\"q-1\",\"operationalNumber\":\"Q001\",\"documentDate\":\"2026-10-01T00:00:00Z\","
+                + "\"status\":\"Pending\",\"socialName\":\"ACME CORP\",\"totalNet\":250.00,\"lines\":[{\"order\":1,"
+                + "\"productId\":\"p-1\",\"productCode\":\"P1\",\"totalQuantity\":5,\"unitPrice\":50.00,\"totalNet\":250.00}]}],"
+                + "\"pageInfo\":{\"hasNextPage\":false},\"totalCount\":1}}");
+
+        Connection<SalesQuote> page = sage.sales().quotes(ListOptions.first(5));
+        assertEquals(1L, page.getTotalCount());
+        SalesQuote quote = page.getNodes().get(0);
+        assertEquals("Q001", quote.getOperationalNumber());
+        assertEquals("Pending", quote.getStatus());
+        assertEquals(new BigDecimal("250.00"), quote.getTotalNet());
+        assertEquals(1, quote.getLines().size());
+        assertEquals(new BigDecimal("50.00"), quote.getLines().get(0).getUnitPrice());
+
+        respond("{\"createSalesQuote\":{\"id\":\"q-new\",\"operationalNumber\":\"Q002\"}}");
+        String createdId = sage.sales().createQuote(new SalesQuoteInput()
+                .customerId("cust-1")
+                .documentDate(LocalDate.of(2026, 10, 2))
+                .addLine(new SalesQuoteLineInput().productId("p-1").totalQuantity(10).unitPrice(new BigDecimal("45.00"))));
+        assertEquals("q-new", createdId);
+        assertContains(query(lastRequest()), "createSalesQuote");
+    }
+
+    @Test
+    void ordersAndCreateOrder() {
+        respond("{\"salesOrders\":{\"nodes\":[{\"id\":\"o-1\",\"operationalNumber\":\"ORD-01\",\"documentDate\":\"2026-10-01T00:00:00Z\","
+                + "\"status\":\"Pending\",\"socialName\":\"ACME CORP\",\"totalNet\":300.00,\"lines\":[{\"order\":1,"
+                + "\"productId\":\"p-1\",\"productCode\":\"P1\",\"totalQuantity\":6,\"pendingQuantity\":6,"
+                + "\"unitPrice\":50.00,\"totalNet\":300.00}]}],"
+                + "\"pageInfo\":{\"hasNextPage\":false},\"totalCount\":1}}");
+
+        Connection<SalesOrder> page = sage.sales().orders(ListOptions.first(5));
+        assertEquals(1L, page.getTotalCount());
+        SalesOrder order = page.getNodes().get(0);
+        assertEquals("ORD-01", order.getOperationalNumber());
+        assertEquals("Pending", order.getStatus());
+        assertEquals(new BigDecimal("300.00"), order.getTotalNet());
+        assertEquals(1, order.getLines().size());
+        assertEquals(new BigDecimal("6"), order.getLines().get(0).getPendingQuantity());
+
+        respond("{\"createSalesOrder\":{\"id\":\"o-new\",\"operationalNumber\":\"ORD-02\"}}");
+        String createdId = sage.sales().createOrder(new SalesOrderInput()
+                .customerId("cust-1")
+                .documentDate(LocalDate.of(2026, 10, 2))
+                .addLine(new SalesOrderLineInput().productId("p-1").totalQuantity(12).unitPrice(new BigDecimal("40.00"))));
+        assertEquals("o-new", createdId);
+        assertContains(query(lastRequest()), "createSalesOrder");
+    }
+
+    @Test
+    void generateCreditNote() {
+        respond("{\"generateCreditNote\":{\"id\":\"cn-1\"}}");
+        String creditNoteId = sage.sales().generateCreditNote("inv-123");
+        assertEquals("cn-1", creditNoteId);
+        assertContains(query(lastRequest()), "generateCreditNote");
+        Map<String, Object> input = JsonReader.getMap(variables(lastRequest()), "input");
+        assertEquals("inv-123", input.get("id"));
     }
 }

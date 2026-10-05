@@ -1,0 +1,34 @@
+query ($first: Int, $after: String{{vars}}) {
+  salesOrders({{args}}) {
+    nodes {
+      id
+      operationalNumber
+      documentDate
+      creationDate
+      customerId
+      socialName
+      status
+      totalNet
+      totalGross
+      totalVat
+      totalLiquid
+      discount
+      documentTypeId
+      lines {
+        id
+        order
+        productId
+        productCode
+        productName
+        totalQuantity
+        pendingQuantity
+        unitPrice
+        firstDiscount
+        totalNet
+        vatPercentage
+      }
+    }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

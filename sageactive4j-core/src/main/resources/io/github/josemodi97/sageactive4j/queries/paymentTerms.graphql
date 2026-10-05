@@ -1,0 +1,20 @@
+query ($first: Int, $after: String{{vars}}) {
+  paymentTerms({{args}}) {
+    nodes {
+      id
+      name
+      modificationDate
+      lines {
+        id
+        type
+        paymentMeanId
+        day
+        condition
+        order
+        payDays
+      }
+    }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

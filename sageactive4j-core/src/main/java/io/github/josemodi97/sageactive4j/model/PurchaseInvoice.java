@@ -29,6 +29,7 @@ public final class PurchaseInvoice extends SageObject {
     public Boolean getHasCashVat() { return bool("hasCashVat"); }
     /** The file the invoice was read from, when created by OCR. */
     public String getFileName() { return string("fileName"); }
+    public String getFileId() { return string("fileId"); }
     public OffsetDateTime getCreationDate() { return dateTime("creationDate"); }
     public List<VatLine> getVatLines() { return list(VatLine::new, "vatLines"); }
 

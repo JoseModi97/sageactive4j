@@ -12,11 +12,15 @@ import io.github.josemodi97.sageactive4j.model.AccountingEntry;
 import io.github.josemodi97.sageactive4j.model.AccountingExercise;
 import io.github.josemodi97.sageactive4j.model.CreatedRecord;
 import io.github.josemodi97.sageactive4j.model.JournalType;
+import io.github.josemodi97.sageactive4j.model.PaymentTerm;
+import io.github.josemodi97.sageactive4j.model.Tax;
+import io.github.josemodi97.sageactive4j.model.TaxGroup;
+import io.github.josemodi97.sageactive4j.model.TaxTreatment;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/** Fiscal years, chart of accounts, journals and journal entries. */
+/** Fiscal years, chart of accounts, journals, taxes and payment terms. */
 public final class AccountingClient extends DomainClient {
 
     public AccountingClient(SageActive4jClient client) {
@@ -82,5 +86,41 @@ public final class AccountingClient extends DomainClient {
                 "createAccountingEntryUsingCodes",
                 Collections.singletonMap("values", validated(entry, "entry"))));
         return new CreatedRecord(require(data, "createAccountingEntryUsingCodes"));
+    }
+
+    /** Commercial payment terms. */
+    public Connection<PaymentTerm> paymentTerms(ListOptions options) {
+        return list(organization("paymentTerms"), "paymentTerms", options, null, null, null, PaymentTerm::new);
+    }
+
+    public Iterable<PaymentTerm> allPaymentTerms(ListOptions options) {
+        return Pages.iterate(options, this::paymentTerms);
+    }
+
+    /** Tax definitions. */
+    public Connection<Tax> taxes(ListOptions options) {
+        return list(organization("taxes"), "taxes", options, null, null, null, Tax::new);
+    }
+
+    public Iterable<Tax> allTaxes(ListOptions options) {
+        return Pages.iterate(options, this::taxes);
+    }
+
+    /** Tax groups. */
+    public Connection<TaxGroup> taxGroups(ListOptions options) {
+        return list(organization("taxGroups"), "taxGroups", options, null, null, null, TaxGroup::new);
+    }
+
+    public Iterable<TaxGroup> allTaxGroups(ListOptions options) {
+        return Pages.iterate(options, this::taxGroups);
+    }
+
+    /** Tax treatments. */
+    public Connection<TaxTreatment> taxTreatments(ListOptions options) {
+        return list(organization("taxTreatments"), "taxTreatments", options, null, null, null, TaxTreatment::new);
+    }
+
+    public Iterable<TaxTreatment> allTaxTreatments(ListOptions options) {
+        return Pages.iterate(options, this::taxTreatments);
     }
 }

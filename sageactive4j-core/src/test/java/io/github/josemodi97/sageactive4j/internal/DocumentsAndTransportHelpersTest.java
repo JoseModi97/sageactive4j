@@ -19,7 +19,8 @@ class DocumentsAndTransportHelpersTest {
     void everyBundledDocumentLoadsAndListTemplatesRender() throws IOException {
         String[] lists = {"organizations", "countries", "currencies", "users", "accountingExercises", "accountingAccounts",
             "journalTypes", "accountingEntries", "customers", "suppliers", "products", "salesInvoices",
-            "salesInvoiceOpenItems", "purchaseInvoices", "purchaseInvoiceOpenItems", "bankMovements", "paymentMethods", "files"};
+            "salesInvoiceOpenItems", "purchaseInvoices", "purchaseInvoiceOpenItems", "bankMovements", "paymentMethods", "files",
+            "salesQuotes", "salesOrders", "salesTariffs", "taxes", "taxGroups", "taxTreatments", "paymentTerms"};
         for (String name : lists) {
             GraphQLRequest request = GraphQLDocuments.list(name, ListOptions.first(5), null, null, null, null);
             assertFalse(request.getQuery().contains("{{"), name + " left a placeholder");
@@ -30,7 +31,7 @@ class DocumentsAndTransportHelpersTest {
             "createCustomer", "productPriceById", "createSalesInvoice", "closeSalesInvoice", "postSalesInvoice",
             "salesOpenItemSettlement", "postPurchaseInvoice", "purchaseOpenItemSettlement", "bankAccounts",
             "reconcileBankMovement", "unReconcileBankMovement", "uploadFileToEntity", "filesExport", "aggregationCatalog",
-            "aggregationExecute", "localizedErrorMessage"};
+            "aggregationExecute", "localizedErrorMessage", "createSalesQuote", "createSalesOrder", "generateCreditNote"};
         for (String name : operations) {
             assertBalanced(name, GraphQLDocuments.load(name));
         }

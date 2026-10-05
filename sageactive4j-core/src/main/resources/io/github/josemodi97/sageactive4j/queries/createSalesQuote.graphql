@@ -1,0 +1,6 @@
+mutation ($values: SalesQuoteCreateGLDtoInput!) {
+  createSalesQuote(input: $values) {
+    id
+    operationalNumber
+  }
+}

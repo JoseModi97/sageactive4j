@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Phase 6 domain coverage expansion:
+  - `sales().quotes(...)`, `allQuotes(...)`, and `createQuote(...)`: strongly typed sales quotes query and creation.
+  - `sales().orders(...)`, `allOrders(...)`, and `createOrder(...)`: strongly typed sales orders query and creation.
+  - `sales().generateCreditNote(invoiceId)`: credit note generation from a posted sales invoice.
+  - `products().tariffs(...)` and `allTariffs(...)`: sales tariff lists and stretch rules.
+  - `accounting().taxes(...)`, `taxGroups(...)`, and `taxTreatments(...)`: tax definitions, tax groups, and fiscal VAT treatments.
+  - `accounting().paymentTerms(...)` and `allPaymentTerms(...)`: commercial payment term schedules and maturity rules.
+  - `purchases().uploadReceipt(...)` and `invoicesByFileId(...)`: automated OCR receipt ingestion via `AP_AUTOMATION`.
 - `sageactive4j-maven-plugin` (`mvn io.github.josemodi97:sageactive4j-maven-plugin:init`)
   and the `io.github.josemodi97.sageactive4j` Gradle plugin (`./gradlew sageactive4jInit`).
   - Detect the project's framework (plain Java, javax/jakarta servlet,

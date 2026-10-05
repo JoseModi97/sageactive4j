@@ -66,4 +66,44 @@ class ModelParsingTest {
         assertEquals("application/octet-stream", FileUpload.of("blob", new byte[0]).getContentType());
         assertEquals("text/x-custom", FileUpload.of("a.pdf", "text/x-custom", new byte[0]).getContentType());
     }
+
+    @Test
+    void newDomainModelsParseCorrectly() {
+        SalesQuote quote = new SalesQuote(JsonReader.parseObject("{\"id\":\"q1\",\"operationalNumber\":\"Q100\","
+                + "\"status\":\"Pending\",\"lines\":[{\"id\":\"ql1\",\"productId\":\"p1\",\"unitPrice\":99.50}]}"));
+        assertEquals("q1", quote.getId());
+        assertEquals("Q100", quote.getOperationalNumber());
+        assertEquals("Pending", quote.getStatus());
+        assertEquals(1, quote.getLines().size());
+        assertEquals(new java.math.BigDecimal("99.50"), quote.getLines().get(0).getUnitPrice());
+
+        SalesOrder order = new SalesOrder(JsonReader.parseObject("{\"id\":\"o1\",\"operationalNumber\":\"ORD100\","
+                + "\"status\":\"Closed\",\"totalLiquid\":120.00}"));
+        assertEquals("o1", order.getId());
+        assertEquals("ORD100", order.getOperationalNumber());
+        assertEquals("Closed", order.getStatus());
+        assertEquals(new java.math.BigDecimal("120.00"), order.getTotalLiquid());
+
+        SalesTariff tariff = new SalesTariff(JsonReader.parseObject("{\"id\":\"t1\",\"code\":\"TAR01\",\"enabled\":true}"));
+        assertEquals("TAR01", tariff.getCode());
+        assertTrue(tariff.isEnabled());
+
+        PaymentTerm term = new PaymentTerm(JsonReader.parseObject("{\"id\":\"pt1\",\"name\":\"60 Days\","
+                + "\"lines\":[{\"day\":60,\"type\":\"MATURITY\"}]}"));
+        assertEquals("60 Days", term.getName());
+        assertEquals(60, term.getLines().get(0).getDay());
+
+        Tax tax = new Tax(JsonReader.parseObject("{\"name\":\"TVA 20%\",\"percentage\":20,\"inactive\":false}"));
+        assertEquals("TVA 20%", tax.getName());
+        assertEquals(new java.math.BigDecimal("20"), tax.getPercentage());
+        assertEquals(false, tax.isInactive());
+
+        TaxGroup group = new TaxGroup(JsonReader.parseObject("{\"name\":\"Group1\",\"taxGroupCode\":\"G1\"}"));
+        assertEquals("Group1", group.getName());
+        assertEquals("G1", group.getTaxGroupCode());
+
+        TaxTreatment treatment = new TaxTreatment(JsonReader.parseObject("{\"description\":\"Domestic\",\"taxCode\":\"DOM\"}"));
+        assertEquals("Domestic", treatment.getDescription());
+        assertEquals("DOM", treatment.getTaxCode());
+    }
 }

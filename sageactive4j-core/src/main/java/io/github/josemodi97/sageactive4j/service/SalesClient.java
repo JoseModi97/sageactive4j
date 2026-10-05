@@ -8,19 +8,24 @@ import io.github.josemodi97.sageactive4j.graphql.ListOptions;
 import io.github.josemodi97.sageactive4j.graphql.Pages;
 import io.github.josemodi97.sageactive4j.input.OpenItemSettlementInput;
 import io.github.josemodi97.sageactive4j.input.SalesInvoiceInput;
+import io.github.josemodi97.sageactive4j.input.SalesOrderInput;
+import io.github.josemodi97.sageactive4j.input.SalesQuoteInput;
 import io.github.josemodi97.sageactive4j.internal.GraphQLDocuments;
 import io.github.josemodi97.sageactive4j.model.AccountingPosting;
 import io.github.josemodi97.sageactive4j.model.InvoicePosting;
 import io.github.josemodi97.sageactive4j.model.OpenItem;
 import io.github.josemodi97.sageactive4j.model.SalesInvoice;
+import io.github.josemodi97.sageactive4j.model.SalesOrder;
+import io.github.josemodi97.sageactive4j.model.SalesQuote;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Sales invoices through their whole life: create (draft) → close
- * (numbered, locked) → post (ledger entry) → settle open items (payments).
+ * Sales operations: quotes, orders, invoices through their whole life:
+ * create (draft) → close (numbered, locked) → post (ledger entry) →
+ * settle open items (payments), plus credit note generation.
  */
 public final class SalesClient extends DomainClient {
 
@@ -125,6 +130,48 @@ public final class SalesClient extends DomainClient {
                 "salesOpenItemSettlement",
                 Collections.singletonMap("input", settlement.toMap("salesOpenItemLinkagePaidAmounts"))));
         return new AccountingPosting(require(data, "salesOpenItemSettlement"));
+    }
+
+    /** Sales quotes, most recent first. */
+    public Connection<SalesQuote> quotes(ListOptions options) {
+        return list(organization("salesQuotes"), "salesQuotes", options, null, "[{ documentDate: DESC }]", null,
+                SalesQuote::new);
+    }
+
+    public Iterable<SalesQuote> allQuotes(ListOptions options) {
+        return Pages.iterate(options, this::quotes);
+    }
+
+    /** Creates a draft sales quote and returns its id. */
+    public String createQuote(SalesQuoteInput quote) {
+        Map<String, Object> data = organization("createSalesQuote").query(GraphQLDocuments.operation(
+                "createSalesQuote", Collections.singletonMap("values", validated(quote, "quote"))));
+        return new SalesQuote(require(data, "createSalesQuote")).getId();
+    }
+
+    /** Sales orders, most recent first. */
+    public Connection<SalesOrder> orders(ListOptions options) {
+        return list(organization("salesOrders"), "salesOrders", options, null, "[{ documentDate: DESC }]", null,
+                SalesOrder::new);
+    }
+
+    public Iterable<SalesOrder> allOrders(ListOptions options) {
+        return Pages.iterate(options, this::orders);
+    }
+
+    /** Creates a sales order and returns its id. */
+    public String createOrder(SalesOrderInput order) {
+        Map<String, Object> data = organization("createSalesOrder").query(GraphQLDocuments.operation(
+                "createSalesOrder", Collections.singletonMap("values", validated(order, "order"))));
+        return new SalesOrder(require(data, "createSalesOrder")).getId();
+    }
+
+    /** Generates a credit note for a posted sales invoice; returns the new credit note id. */
+    public String generateCreditNote(String invoiceId) {
+        Map<String, Object> input = Collections.<String, Object>singletonMap("id", requireId(invoiceId, "invoiceId"));
+        Map<String, Object> data = organization("generateCreditNote").query(GraphQLDocuments.operation(
+                "generateCreditNote", Collections.singletonMap("input", input)));
+        return new SalesInvoice(require(data, "generateCreditNote")).getId();
     }
 
     static Map<String, Object> input(String field, Object value) {

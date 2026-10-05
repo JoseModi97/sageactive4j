@@ -1,0 +1,6 @@
+mutation ($values: SalesOrderCreateGLDtoInput!) {
+  createSalesOrder(input: $values) {
+    id
+    operationalNumber
+  }
+}

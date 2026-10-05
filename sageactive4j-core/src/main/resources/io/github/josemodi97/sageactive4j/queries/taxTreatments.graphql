@@ -1,0 +1,16 @@
+query ($first: Int, $after: String{{vars}}) {
+  taxTreatments({{args}}) {
+    nodes {
+      id
+      description
+      taxCode
+      inactive
+      isIntracomunity
+      registerType
+      taxGroupId
+      taxType
+    }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

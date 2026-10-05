@@ -1,0 +1,30 @@
+query ($first: Int, $after: String{{vars}}) {
+  salesQuotes({{args}}) {
+    nodes {
+      id
+      operationalNumber
+      documentDate
+      creationDate
+      customerId
+      socialName
+      status
+      declinedReason
+      totalNet
+      discount
+      documentTypeId
+      lines {
+        id
+        order
+        productId
+        productCode
+        productName
+        totalQuantity
+        unitPrice
+        firstDiscount
+        totalNet
+      }
+    }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

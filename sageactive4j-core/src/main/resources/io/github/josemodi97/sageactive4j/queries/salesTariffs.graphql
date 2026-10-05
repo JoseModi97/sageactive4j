@@ -1,0 +1,25 @@
+query ($first: Int, $after: String{{vars}}) {
+  salesTariffs({{args}}) {
+    nodes {
+      id
+      code
+      name
+      type
+      enabled
+      startDate
+      endDate
+      modificationDate
+      creationDate
+      lines {
+        id
+        productId
+        enabled
+        indicatorValue
+        startDate
+        endDate
+      }
+    }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

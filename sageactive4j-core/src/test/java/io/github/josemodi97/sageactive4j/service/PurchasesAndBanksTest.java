@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.josemodi97.sageactive4j.graphql.Connection;
+import io.github.josemodi97.sageactive4j.graphql.FileUpload;
 import io.github.josemodi97.sageactive4j.graphql.ListOptions;
 import io.github.josemodi97.sageactive4j.input.OpenItemSettlementInput;
 import io.github.josemodi97.sageactive4j.input.ReconcileInput;
@@ -145,5 +147,23 @@ class PurchasesAndBanksTest extends DomainTestSupport {
         respond("{\"paymentMethods\":{\"nodes\":[{\"id\":\"pm1\",\"referenceName\":\"Cash\",\"type\":\"CASH\"}],"
                 + "\"pageInfo\":{\"hasNextPage\":false},\"totalCount\":1}}");
         assertEquals("CASH", sage.banks().paymentMethods(ListOptions.defaults()).getNodes().get(0).getType());
+    }
+
+    @Test
+    void uploadReceiptForOcrAndQueryByFileId() {
+        respond("{\"uploadFileToEntity\":{\"id\":\"receipt-file-123.pdf\"}}");
+        String fileId = sage.purchases().uploadReceipt(FileUpload.of("receipt.pdf", "application/pdf", new byte[] { 1, 2, 3 }));
+        assertEquals("receipt-file-123.pdf", fileId);
+
+        respond("{\"purchaseInvoices\":{\"nodes\":[{\"id\":\"pi-ocr-1\",\"invoiceNumber\":\"INV-OCR-01\","
+                + "\"status\":\"Pending\",\"fileId\":\"receipt-file-123.pdf\",\"fileName\":\"receipt.pdf\"}],"
+                + "\"pageInfo\":{\"hasNextPage\":false},\"totalCount\":1}}");
+        Connection<PurchaseInvoice> invoices = sage.purchases().invoicesByFileId("receipt-file-123.pdf", ListOptions.defaults());
+        assertEquals(1L, invoices.getTotalCount());
+        PurchaseInvoice invoice = invoices.getNodes().get(0);
+        assertEquals("INV-OCR-01", invoice.getInvoiceNumber());
+        assertEquals("receipt-file-123.pdf", invoice.getFileId());
+        assertEquals("receipt.pdf", invoice.getFileName());
+        assertContains(query(lastRequest()), "where: { fileId: { eq: $fileId } }");
     }
 }

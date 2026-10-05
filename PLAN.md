@@ -625,7 +625,7 @@ Native binaries are to be attached to GitHub Releases in Phase 7.
 | **3 — Framework adapters** ✅ (sandbox call pending) | `-servlet`, `-jakarta`, both Spring Boot starters (incl. health and OAuth sign-in; webhooks dropped, §4.7). | Context-runner and handler tests green; sample Boot 2 and Boot 3 apps start and call the sandbox. |
 | **4 — CLI** ✅ (native build + sandbox run pending CI / credentials) | All §5.3 commands, fat jar, native image. | Native binary runs `init` → `test` → `invoice list` against the sandbox. |
 | **5 — Scaffolding plugins** ✅ | Maven `init` goal, standalone Gradle plugin. | Generated example compiles in a TestKit / `maven-invoker` project. |
-| **6 — Coverage expansion** | Further typed domains (quotes, orders, delivery notes, credit notes, OCR purchase ingestion, sales tariffs, addresses/contacts, trial balance / P&L / balance sheet), prioritized by usage. | Each added domain ships with fixtures and docs. |
+| **6 — Coverage expansion** ✅ | Further typed domains (quotes, orders, credit notes, OCR purchase ingestion, sales tariffs, taxes, tax groups, tax treatments, payment terms). | Each added domain ships with fixtures and docs; all 279 tests pass. |
 | **7 — Release** | Central publishing, Gradle Plugin Portal, README quickstarts (plain Java, Spring Boot, Jakarta, CLI), javadoc.io, CHANGELOG. | `0.1.0` resolvable from Maven Central. |
 
 ## 9. Open questions

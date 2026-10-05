@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.josemodi97.sageactive4j.graphql.Connection;
 import io.github.josemodi97.sageactive4j.graphql.ListOptions;
 import io.github.josemodi97.sageactive4j.input.AddressInput;
 import io.github.josemodi97.sageactive4j.input.CustomerInput;
@@ -13,6 +14,7 @@ import io.github.josemodi97.sageactive4j.model.CreatedRecord;
 import io.github.josemodi97.sageactive4j.model.Customer;
 import io.github.josemodi97.sageactive4j.model.Product;
 import io.github.josemodi97.sageactive4j.model.ProductPrice;
+import io.github.josemodi97.sageactive4j.model.SalesTariff;
 import io.github.josemodi97.sageactive4j.testsupport.DomainTestSupport;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -110,5 +112,22 @@ class ThirdPartiesAndProductsTest extends DomainTestSupport {
     void priceRejectsCustomerAndLeadDocumentTypeTogether() {
         assertThrows(IllegalArgumentException.class, () -> sage.products().price("p",
                 new ProductPriceRequest().customerId("c").documentTypeId("d")));
+    }
+
+    @Test
+    void tariffs() {
+        respond("{\"salesTariffs\":{\"nodes\":[{\"id\":\"t-1\",\"code\":\"T01\",\"name\":\"Standard Tariff\","
+                + "\"enabled\":true,\"lines\":[{\"id\":\"tl-1\",\"productId\":\"p-1\",\"enabled\":true,\"indicatorValue\":15.50}]}],"
+                + "\"pageInfo\":{\"hasNextPage\":false},\"totalCount\":1}}");
+
+        Connection<SalesTariff> tariffs = sage.products().tariffs(ListOptions.first(10));
+        assertEquals(1L, tariffs.getTotalCount());
+        SalesTariff tariff = tariffs.getNodes().get(0);
+        assertEquals("T01", tariff.getCode());
+        assertEquals("Standard Tariff", tariff.getName());
+        assertTrue(tariff.isEnabled());
+        assertEquals(1, tariff.getLines().size());
+        assertEquals(new BigDecimal("15.50"), tariff.getLines().get(0).getIndicatorValue());
+        assertContains(query(lastRequest()), "salesTariffs(first: $first, after: $after, order: [{ code: ASC }])");
     }
 }

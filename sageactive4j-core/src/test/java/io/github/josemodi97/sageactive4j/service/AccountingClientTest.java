@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.josemodi97.sageactive4j.graphql.Connection;
 import io.github.josemodi97.sageactive4j.graphql.ListOptions;
 import io.github.josemodi97.sageactive4j.input.AccountingEntryInput;
 import io.github.josemodi97.sageactive4j.input.AccountingEntryLineInput;
@@ -12,6 +13,10 @@ import io.github.josemodi97.sageactive4j.model.AccountingAccount;
 import io.github.josemodi97.sageactive4j.model.AccountingEntry;
 import io.github.josemodi97.sageactive4j.model.AccountingExercise;
 import io.github.josemodi97.sageactive4j.model.CreatedRecord;
+import io.github.josemodi97.sageactive4j.model.PaymentTerm;
+import io.github.josemodi97.sageactive4j.model.Tax;
+import io.github.josemodi97.sageactive4j.model.TaxGroup;
+import io.github.josemodi97.sageactive4j.model.TaxTreatment;
 import io.github.josemodi97.sageactive4j.testsupport.DomainTestSupport;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -118,5 +123,63 @@ class AccountingClientTest extends DomainTestSupport {
                 .addLine(new AccountingEntryLineInput().subAccountCode("6262").set("debitAmount", 100))
                 .addLine(new AccountingEntryLineInput().subAccountCode("512").set("creditAmount", 100)));
         assertEquals(1, server.requests().size());
+    }
+
+    @Test
+    void paymentTerms() {
+        respond("{\"paymentTerms\":{\"nodes\":[{\"id\":\"pt-1\",\"name\":\"30 Days Net\",\"lines\":[{\"id\":\"ptl-1\","
+                + "\"type\":\"MATURITY\",\"day\":30,\"condition\":\"NORMAL\",\"order\":1}]}],"
+                + "\"pageInfo\":{\"hasNextPage\":false},\"totalCount\":1}}");
+
+        Connection<PaymentTerm> terms = sage.accounting().paymentTerms(ListOptions.first(10));
+        assertEquals(1L, terms.getTotalCount());
+        PaymentTerm term = terms.getNodes().get(0);
+        assertEquals("30 Days Net", term.getName());
+        assertEquals(1, term.getLines().size());
+        assertEquals("MATURITY", term.getLines().get(0).getType());
+        assertEquals(30, term.getLines().get(0).getDay());
+    }
+
+    @Test
+    void taxes() {
+        respond("{\"taxes\":{\"nodes\":[{\"id\":\"t-1\",\"name\":\"VAT 20%\",\"percentage\":20.00,"
+                + "\"hasEquivalenceSurcharge\":false,\"taxType\":\"VAT\",\"inactive\":false}],"
+                + "\"pageInfo\":{\"hasNextPage\":false},\"totalCount\":1}}");
+
+        Connection<Tax> taxes = sage.accounting().taxes(ListOptions.first(10));
+        assertEquals(1L, taxes.getTotalCount());
+        Tax tax = taxes.getNodes().get(0);
+        assertEquals("VAT 20%", tax.getName());
+        assertEquals(new BigDecimal("20.00"), tax.getPercentage());
+        assertEquals("VAT", tax.getTaxType());
+        assertEquals(false, tax.isInactive());
+    }
+
+    @Test
+    void taxGroups() {
+        respond("{\"taxGroups\":{\"nodes\":[{\"id\":\"tg-1\",\"name\":\"Standard Goods\",\"taxGroupCode\":\"STD\","
+                + "\"taxType\":\"VAT\",\"vatTaxation\":\"DOMESTIC\"}],\"pageInfo\":{\"hasNextPage\":false},\"totalCount\":1}}");
+
+        Connection<TaxGroup> groups = sage.accounting().taxGroups(ListOptions.first(10));
+        assertEquals(1L, groups.getTotalCount());
+        TaxGroup group = groups.getNodes().get(0);
+        assertEquals("Standard Goods", group.getName());
+        assertEquals("STD", group.getTaxGroupCode());
+        assertEquals("DOMESTIC", group.getVatTaxation());
+    }
+
+    @Test
+    void taxTreatments() {
+        respond("{\"taxTreatments\":{\"nodes\":[{\"id\":\"tt-1\",\"description\":\"Domestic Purchases\","
+                + "\"taxCode\":\"DOM_PURCH\",\"inactive\":false,\"isIntracomunity\":false,\"registerType\":\"PURCHASE\","
+                + "\"taxGroupId\":\"tg-1\",\"taxType\":\"VAT\"}],\"pageInfo\":{\"hasNextPage\":false},\"totalCount\":1}}");
+
+        Connection<TaxTreatment> treatments = sage.accounting().taxTreatments(ListOptions.first(10));
+        assertEquals(1L, treatments.getTotalCount());
+        TaxTreatment treatment = treatments.getNodes().get(0);
+        assertEquals("Domestic Purchases", treatment.getDescription());
+        assertEquals("DOM_PURCH", treatment.getTaxCode());
+        assertEquals("PURCHASE", treatment.getRegisterType());
+        assertEquals(false, treatment.isIntracomunity());
     }
 }

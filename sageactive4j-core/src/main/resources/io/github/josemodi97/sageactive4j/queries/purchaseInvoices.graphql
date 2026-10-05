@@ -1,6 +1,6 @@
 query ($first: Int, $after: String{{vars}}) {
   purchaseInvoices({{args}}) {
-    nodes { id invoiceNumber invoiceDate operationDate firstDueDate status description supplierId supplier { id code socialName } totalLiquid pendingAmount hasCashVat fileName creationDate vatLines { id totalVat totalVatBase taxId taxTreatmentId purchaseAccountingAccountId } }
+    nodes { id invoiceNumber invoiceDate operationDate firstDueDate status description supplierId supplier { id code socialName } totalLiquid pendingAmount hasCashVat fileName fileId creationDate vatLines { id totalVat totalVatBase taxId taxTreatmentId purchaseAccountingAccountId } }
     pageInfo { hasNextPage endCursor }
     totalCount
   }

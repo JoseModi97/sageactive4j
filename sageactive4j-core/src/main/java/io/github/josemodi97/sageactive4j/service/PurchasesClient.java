@@ -2,8 +2,11 @@ package io.github.josemodi97.sageactive4j.service;
 
 import io.github.josemodi97.sageactive4j.SageActive4jClient;
 import io.github.josemodi97.sageactive4j.graphql.Connection;
+import io.github.josemodi97.sageactive4j.graphql.FileUpload;
 import io.github.josemodi97.sageactive4j.graphql.ListOptions;
 import io.github.josemodi97.sageactive4j.graphql.Pages;
+import io.github.josemodi97.sageactive4j.input.FileAttachment;
+import io.github.josemodi97.sageactive4j.input.FileEntityType;
 import io.github.josemodi97.sageactive4j.input.OpenItemSettlementInput;
 import io.github.josemodi97.sageactive4j.internal.GraphQLDocuments;
 import io.github.josemodi97.sageactive4j.model.AccountingPosting;
@@ -15,7 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Supplier invoices: list, post to the ledger, settle open items. */
+/** Supplier invoices: list, post to the ledger, settle open items, OCR receipt ingestion. */
 public final class PurchasesClient extends DomainClient {
 
     private final AccountingClient accounting;
@@ -75,5 +78,26 @@ public final class PurchasesClient extends DomainClient {
                 "purchaseOpenItemSettlement",
                 Collections.singletonMap("input", settlement.toMap("purchaseOpenItemLinkagePaidAmounts"))));
         return new AccountingPosting(require(data, "purchaseOpenItemSettlement"));
+    }
+
+    /**
+     * Uploads a receipt or purchase invoice file for OCR automated ingestion ({@code AP_AUTOMATION}).
+     * Returns the file id to track processing status.
+     */
+    public String uploadReceipt(FileUpload file) {
+        if (file == null) {
+            throw new IllegalArgumentException("file must not be null");
+        }
+        return client.files().upload(new FileAttachment()
+                .file(file)
+                .entityType(FileEntityType.AP_AUTOMATION));
+    }
+
+    /** Invoices generated from an uploaded OCR file id. */
+    public Connection<PurchaseInvoice> invoicesByFileId(String fileId, ListOptions options) {
+        return list(organization("purchaseInvoices"), "purchaseInvoices", options,
+                "{ fileId: { eq: $fileId } }", "[{ invoiceDate: DESC }]",
+                GraphQLDocuments.var("fileId", "String", requireId(fileId, "fileId")),
+                PurchaseInvoice::new);
     }
 }

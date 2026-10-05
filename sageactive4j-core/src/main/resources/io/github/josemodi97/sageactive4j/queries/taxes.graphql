@@ -1,0 +1,19 @@
+query ($first: Int, $after: String{{vars}}) {
+  taxes({{args}}) {
+    nodes {
+      id
+      name
+      groupName
+      groupId
+      percentage
+      equivalenceSurchargePercentage
+      hasEquivalenceSurcharge
+      taxType
+      inactive
+      effectiveDate
+      inactivationDate
+    }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

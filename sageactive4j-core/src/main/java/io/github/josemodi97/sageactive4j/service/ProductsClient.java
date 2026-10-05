@@ -8,6 +8,7 @@ import io.github.josemodi97.sageactive4j.input.ProductPriceRequest;
 import io.github.josemodi97.sageactive4j.internal.GraphQLDocuments;
 import io.github.josemodi97.sageactive4j.model.Product;
 import io.github.josemodi97.sageactive4j.model.ProductPrice;
+import io.github.josemodi97.sageactive4j.model.SalesTariff;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -40,5 +41,15 @@ public final class ProductsClient extends DomainClient {
         Map<String, Object> data = organization("productPriceById")
                 .query(GraphQLDocuments.operation("productPriceById", variables));
         return new ProductPrice(require(data, "productPriceById"));
+    }
+
+    /** Sales tariffs by code. */
+    public Connection<SalesTariff> tariffs(ListOptions options) {
+        return list(organization("salesTariffs"), "salesTariffs", options, null, "[{ code: ASC }]", null,
+                SalesTariff::new);
+    }
+
+    public Iterable<SalesTariff> allTariffs(ListOptions options) {
+        return Pages.iterate(options, this::tariffs);
     }
 }
