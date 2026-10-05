@@ -1,0 +1,3 @@
+mutation ($values: AccountingEntryCreateUsingCodesGLDtoInput!) {
+  createAccountingEntryUsingCodes(input: $values) { id number }
+}

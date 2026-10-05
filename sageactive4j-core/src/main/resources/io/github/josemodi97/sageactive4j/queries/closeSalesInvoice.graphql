@@ -1,0 +1,3 @@
+mutation ($input: CloseSalesInvoiceGLDtoInput!) {
+  closeSalesInvoice(input: $input) { id operationalNumber }
+}

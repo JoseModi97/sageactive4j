@@ -1,0 +1,7 @@
+query ($id: ID!, $productPrice: ProductPriceGLDtoInput!) {
+  productPriceById(id: $id, productPrice: $productPrice) {
+    price { code name source value }
+    firstDiscount { code name source value }
+    taxGroupId taxId taxPercentage taxTreatmentId equivalenceSurchargePercentage
+  }
+}

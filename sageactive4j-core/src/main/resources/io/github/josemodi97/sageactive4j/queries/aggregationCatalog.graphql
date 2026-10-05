@@ -1,0 +1,9 @@
+query ($contextContains: String) {
+  aggregationCatalog(contextContains: $contextContains) {
+    definitions {
+      entityKey context aggregationTypes periodTypes filters
+      groupBy { name title1 title2 }
+      valueColumns distinctCounts searchScopes
+    }
+  }
+}

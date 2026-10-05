@@ -1,0 +1,3 @@
+query ($errorCode: String!, $language: String!) {
+  localizedErrorMessage(errorCode: $errorCode, language: $language) { message }
+}

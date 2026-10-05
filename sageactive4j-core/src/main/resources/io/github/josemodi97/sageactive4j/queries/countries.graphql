@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  countries({{args}}) {
+    nodes { id name isoCodeAlpha2 isoCodeAlpha3 isoNumber viesCode }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

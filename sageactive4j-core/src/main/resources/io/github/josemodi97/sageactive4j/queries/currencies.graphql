@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  currencies({{args}}) {
+    nodes { id code description precision }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

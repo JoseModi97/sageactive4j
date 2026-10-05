@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  salesInvoiceOpenItems({{args}}) {
+    nodes { id amount paidAmountAccumulated dueDate status isAdvanceInvoicePayment paymentMeanId salesInvoiceId }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

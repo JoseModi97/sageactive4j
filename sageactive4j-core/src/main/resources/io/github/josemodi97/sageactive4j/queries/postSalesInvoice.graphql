@@ -1,0 +1,6 @@
+mutation ($input: PostSalesInvoiceGLDtoInput!) {
+  postSalesInvoice(input: $input) {
+    accountingEntryId accountingEntryNumber
+    accountingEntries { accountingEntryId accountingEntryNumber }
+  }
+}

@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  customers({{args}}) {
+    nodes { id code socialName tradeName countryAcronym documentId vatNumber customerType status disabled creationDate modificationDate addresses { id name firstLine secondLine city zipCode province countryIsoCodeAlpha2 countryName isMainAddress } contacts { id name surname isDefault emails { emailAddress usage isDefault } phones { number type isDefault } } }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

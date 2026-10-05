@@ -1,0 +1,6 @@
+query {
+  bankAccounts {
+    id referenceName type disabled iban bic bankName accountingAccountCode journalTypeId subAccountId
+    balanceAmount bankingAvailableBalanceAmount bankingLedgerBalanceAmount bankingLastSyncDate bankingPendingTransactions
+  }
+}

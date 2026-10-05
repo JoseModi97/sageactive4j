@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  accountingAccounts({{args}}) {
+    nodes { id code { value } name description deactivated accountLevel subAccountType accountType applyVat taxTreatmentId }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

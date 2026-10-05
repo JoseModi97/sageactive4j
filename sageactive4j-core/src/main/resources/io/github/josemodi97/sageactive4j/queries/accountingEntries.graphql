@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  accountingEntries({{args}}) {
+    nodes { id number date documentDate documentNumber description isClosed entryType journalTypeId journalType { id code name type } accountingEntryLines { id order description documentNumber debitAmount creditAmount subAccountId accountingEntryThirdParty { thirdPartyId code socialName origin } } }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

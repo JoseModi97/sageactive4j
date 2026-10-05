@@ -1,0 +1,3 @@
+query {
+  userProfile { id fullName firstName lastName authenticationEmail applicationLanguageCode }
+}

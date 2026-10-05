@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  products({{args}}) {
+    nodes { id code name category lineDescription comments obsolete salesUnitPrice salesVatPercentage firstSalesDiscount unitOfMeasurementId taxGroupId salesAccountingAccountId }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  accountingExercises({{args}}) {
+    nodes { id exercise description startDate endDate numberPeriods status }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

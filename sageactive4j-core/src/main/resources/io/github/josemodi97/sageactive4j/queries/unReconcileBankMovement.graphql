@@ -1,0 +1,3 @@
+mutation ($input: UnReconcileBankMovementGLDtoInput!) {
+  unReconcileBankMovement(input: $input) { id }
+}

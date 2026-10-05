@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  salesInvoices({{args}}) {
+    nodes { id operationalNumber documentDate operationDate firstDueDate status type socialName customerId customer { id code socialName } totalNet totalGross totalDiscount totalVat totalLiquid comments externalReference hasCreditNote creationDate lines { id order productId productCode productName totalQuantity unitPrice firstDiscount vatPercentage totalNet totalVat totalLiquid } }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

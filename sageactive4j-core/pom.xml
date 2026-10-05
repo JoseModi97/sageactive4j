@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.josemodi97</groupId>
+    <artifactId>sageactive4j-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>sageactive4j-core</artifactId>
+  <packaging>jar</packaging>
+
+  <name>sageactive4j Core</name>
+  <description>
+    Dependency-free Java SDK core for the Sage Active Public API V2 (GraphQL):
+    SBC Auth OAuth 2.0, rate-limit backoff, multipart uploads, and typed
+    accounting, sales, purchases, banking, and analytics clients. Zero runtime
+    dependencies; Java 8+.
+  </description>
+  <url>https://github.com/JoseModi97/sageactive4j</url>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>sageactive4j-core-${project.version}</finalName>
+    <resources>
+      <!-- Fills version.properties' @project.version@ token (SageActive4j.version()). -->
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+    <plugins>
+      <!--
+        Multi-release jar: a real module-info.java (Java 9+, src/main/java9)
+        and a Java 11+ layer (src/main/java11) on top of the Java-8-only base
+        classes. `multiReleaseOutput=true` compiles each extra execution
+        straight into target/classes/META-INF/versions/<release>/.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-compile</id>
+            <configuration>
+              <release>8</release>
+            </configuration>
+          </execution>
+          <execution>
+            <id>compile-java9</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <release>9</release>
+              <multiReleaseOutput>true</multiReleaseOutput>
+              <compileSourceRoots>
+                <compileSourceRoot>${project.basedir}/src/main/java9</compileSourceRoot>
+              </compileSourceRoots>
+            </configuration>
+          </execution>
+          <execution>
+            <id>compile-java11</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <release>11</release>
+              <multiReleaseOutput>true</multiReleaseOutput>
+              <compileSourceRoots>
+                <compileSourceRoot>${project.basedir}/src/main/java11</compileSourceRoot>
+              </compileSourceRoots>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+            <manifestEntries>
+              <Multi-Release>true</Multi-Release>
+              <Implementation-Title>sageactive4j</Implementation-Title>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <!--
+        Unit tests (surefire) run against target/classes, which only holds
+        the Java 8 HttpURLConnection transport. Failsafe re-runs the whole
+        suite against the packaged multi-release jar, where a Java 11+ JVM
+        selects the HttpClient variant.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <classesDirectory>${project.build.directory}/${project.build.finalName}.jar</classesDirectory>
+          <includes>
+            <include>**/*Test.java</include>
+          </includes>
+          <systemPropertyVariables>
+            <sageactive4j.test.fromJar>true</sageactive4j.test.fromJar>
+          </systemPropertyVariables>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>

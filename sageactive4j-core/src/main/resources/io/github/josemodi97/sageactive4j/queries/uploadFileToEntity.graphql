@@ -1,0 +1,3 @@
+mutation ($input: UploadFileInput!) {
+  uploadFileToEntity(input: $input) { id }
+}

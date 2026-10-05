@@ -1,0 +1,3 @@
+mutation ($input: SalesOpenItemSettlementGLDtoInput!) {
+  salesOpenItemSettlement(input: $input) { accountingEntryId accountingEntryNumber }
+}

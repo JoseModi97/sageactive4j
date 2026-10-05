@@ -1,0 +1,3 @@
+query ($actions: [String!]!) {
+  userAccessPolicyCheck(actions: $actions) { action isAllowed }
+}

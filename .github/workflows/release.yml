@@ -1,0 +1,66 @@
+name: Release
+
+# Publishes every module in the Maven reactor to Maven Central via the
+# Sonatype Central Publishing Portal when a `vX.Y.Z` tag is pushed. Uploads
+# with autoPublish=false, so a human approves the final publish in the
+# Portal UI. See PLAN.md §6.
+#
+# Required repository secrets:
+#   CENTRAL_USERNAME, CENTRAL_PASSWORD   - Central Publishing Portal user token
+#   GPG_PRIVATE_KEY, GPG_PASSPHRASE      - artifact signing key
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: build and sign everything, but don't upload to Central."
+        type: boolean
+        default: true
+
+jobs:
+  publish:
+    name: Publish to Maven Central
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+
+      - name: Verify tag matches the reactor's project version
+        if: github.event_name == 'push'
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          POM_VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
+          if [ "$TAG_VERSION" != "$POM_VERSION" ]; then
+            echo "Tag v$TAG_VERSION does not match pom.xml version $POM_VERSION" >&2
+            exit 1
+          fi
+
+      - name: Run the full test suite before publishing anything
+        run: mvn -B verify
+
+      - name: "Dry run: build and sign every module (nothing is uploaded)"
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run
+        run: mvn -B -Prelease -DskipTests verify
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Build, sign, and publish every module
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
+        run: mvn -B -Prelease -DskipTests deploy
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

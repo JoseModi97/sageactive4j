@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  bankMovements({{args}}) {
+    nodes { id bankAccountId transactionAmount datePosted dateFundsAvailable transactionNarrative narrative1 referenceNumber transactionType transactionStatus linkStatus linkStatusDate linkedAccountingEntries { id accountingEntryId date number documentNumber description status isClosed } }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

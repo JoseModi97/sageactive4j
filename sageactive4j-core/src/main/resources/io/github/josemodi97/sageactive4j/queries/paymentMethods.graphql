@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  paymentMethods({{args}}) {
+    nodes { id referenceName type disabled journalTypeId subAccountId }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

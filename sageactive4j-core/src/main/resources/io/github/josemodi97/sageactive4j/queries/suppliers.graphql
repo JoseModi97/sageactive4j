@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  suppliers({{args}}) {
+    nodes { id code socialName tradeName countryAcronym documentId vatNumber status disabled creationDate modificationDate addresses { id name firstLine secondLine city zipCode province countryIsoCodeAlpha2 countryName isMainAddress } }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

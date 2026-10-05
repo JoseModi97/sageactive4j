@@ -1,0 +1,9 @@
+query ($input: AggregationExecuteDtoInput!) {
+  aggregationExecute(input: $input) {
+    meta {
+      entityKey context aggregationType periodType dateMin dateMax compare top includeOthers othersLabel
+      filterName groupByName valueColumn1 valueColumn2 distinctCountName search searchScope
+    }
+    rows { groupValue secondValue period value1 value2 periodN periodN_1 valueN valueN_1 deltaPercent }
+  }
+}

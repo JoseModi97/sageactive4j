@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  journalTypes({{args}}) {
+    nodes { id code name type deactivated accountingAccountId }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

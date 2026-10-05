@@ -1,0 +1,7 @@
+query ($first: Int, $after: String{{vars}}) {
+  organizations({{args}}) {
+    nodes { id socialName legislationCode status onboardingCompleted onboardingDateCompleted creationDate modificationDate }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}

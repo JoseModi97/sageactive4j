@@ -1,0 +1,3 @@
+mutation ($input: PostPurchaseInvoiceGLDtoInput!) {
+  postPurchaseInvoice(input: $input) { accountingEntryId accountingEntryNumber }
+}

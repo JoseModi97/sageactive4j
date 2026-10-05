@@ -1,0 +1,9 @@
+query {
+  organizationDetail(first: 1) {
+    nodes {
+      id socialName documentId vatNumber vatCriterion nafApeCode currencyId
+      currency { id code description precision }
+      addresses { id name firstLine secondLine city zipCode province countryIsoCodeAlpha2 countryName isMainAddress }
+    }
+  }
+}

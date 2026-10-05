@@ -1,0 +1,3 @@
+mutation ($values: SalesInvoiceCreateGLDtoInput!) {
+  createSalesInvoice(input: $values) { id }
+}
